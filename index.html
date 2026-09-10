@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nebula Strike</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="game">
+
+        <!-- Start Screen -->
+        <section id="start-screen" class="screen">
+            <h1>NEBULA STRIKE</h1>
+            <p>Survive the Nebula</p>
+
+            <button id="start-btn">START GAME</button>
+        </section>
+
+
+        <!-- Game Screen -->
+        <section id="game-screen" class="screen">
+
+            <div class="hud">
+
+                <div>
+                    <span>Score</span>
+                    <strong id="score">0</strong>
+                </div>
+
+                <div>
+                    <span>Wave</span>
+                    <strong id="wave">1</strong>
+                </div>
+
+                <div>
+                    <span>Lives</span>
+                    <strong id="lives">3</strong>
+                </div>
+
+            </div>
+
+
+            <div class="game-area">
+
+                <div class="player" id="player">
+                    🚀
+                </div>
+
+            </div>
+
+
+            <div class="energy">
+                <span>Energy</span>
+                <div class="energy-bar">
+                    <div id="energy-fill"></div>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- Game Over Screen -->
+        <section id="game-over" class="screen">
+
+            <h2>GAME OVER</h2>
+
+            <p>Your Score</p>
+            <strong id="final-score">0</strong>
+
+            <button id="restart-btn">PLAY AGAIN</button>
+
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
