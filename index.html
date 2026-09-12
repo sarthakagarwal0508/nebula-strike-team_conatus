@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula Strike - Ishan Enemy Module</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="game">
+        <section id="game-screen" class="screen">
+            <div class="hud">
+                <div><span>Score</span><strong id="score">0</strong></div>
+                <div><span>Wave</span><strong id="wave">1</strong></div>
+                <div><span>Enemies</span><strong id="enemy-count">0</strong></div>
+            </div>
+
+            <div class="game-area" id="game-area">
+                <div class="player-placeholder" id="player-placeholder">🚀</div>
+            </div>
+
+            <div class="boss-hud" id="boss-hud">
+                <span>Boss HP</span>
+                <div class="boss-bar"><div id="boss-fill"></div></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
