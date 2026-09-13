@@ -2,7 +2,7 @@
 
 const area = document.getElementById("game-area");
 const enemyCountUI = document.getElementById("enemy-count");
-const waveUI = document.getElementById("wave");
+//const waveUI = document.getElementById("wave");
 const bossHUD = document.getElementById("boss-hud");
 const bossFill = document.getElementById("boss-fill");
 
@@ -27,7 +27,7 @@ function playerPos() {
     return window.NebulaGame.getPlayerPosition();
 }
 
-function damagePlayer(n) {
+function hurtPlayer(n) {
     window.NebulaGame.damagePlayer(n);
 }
 
@@ -120,7 +120,7 @@ function updateEnemies() {
         }
 
         if (e.y > 92) {
-            damagePlayer(1);
+            hurtPlayer(1);
             removeEnemy(e, false);
         }
     }
@@ -136,15 +136,15 @@ function updateEnemyBullets() {
         b.el.style.top = `${b.y}%`;
 
         if (Math.abs(b.x - p.x) < 4 && Math.abs(b.y - p.y) < 7) {
-            damagePlayer(b.damage);
-            removeBullet(b);
+            hurtPlayer(b.damage);
+            removeEnemyBullet(b);
         } else if (b.y > 105) {
-            removeBullet(b);
+            removeEnemyBullet(b);
         }
     }
 }
 
-function removeBullet(b) {
+function removeEnemyBullet(b) {
     b.el.remove();
     const i = enemyState.bullets.indexOf(b);
     if (i !== -1) enemyState.bullets.splice(i, 1);
@@ -393,7 +393,7 @@ window.addEventListener("nebula-emp", () => {
     }
 
     for (let i = enemyState.bullets.length - 1; i >= 0; i--)
-        removeBullet(enemyState.bullets[i]);
+        removeEnemyBullet(enemyState.bullets[i]);
 });
 
 function updateEnemyCount() {
