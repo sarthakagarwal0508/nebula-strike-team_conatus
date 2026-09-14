@@ -96,3 +96,51 @@ button{font:inherit}
     background:#ffb7e7 !important;
     box-shadow:0 0 8px #ff4d96,0 0 18px rgba(255,50,140,.85) !important;
 }
+.mobile-controls {
+    display: none;
+}
+
+@media (max-width: 700px) {
+    .mobile-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: min(900px, 92vw);
+        margin-top: 10px;
+        gap: 20px;
+        touch-action: none;
+    }
+
+    .move-buttons,
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .mobile-controls button {
+        width: 58px;
+        height: 52px;
+        border: 1px solid rgba(0, 220, 255, .5);
+        border-radius: 12px;
+        background: rgba(10, 20, 45, .9);
+        color: white;
+        font-size: 22px;
+        touch-action: none;
+        user-select: none;
+    }
+
+    .mobile-controls button:active {
+        transform: scale(.94);
+    }
+
+    .game-area {
+        width: 94vw;
+        height: 58vh;
+        min-height: 360px;
+    }
+
+    .top-hud,
+    .bottom-hud {
+        width: 94vw;
+    }
+}
