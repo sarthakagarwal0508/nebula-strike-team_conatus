@@ -66,7 +66,7 @@ const bulletSpeed = 1.8;
 const normalShotDelay = 100;
 const bossShotDelay = 100;
 const rapidShotDelay = 75;
-const shotCost = 4;
+const shotCost = 2;
 const maxEnergy = 100;
 const maxShield = 100;
 const rapidFireDuration = 5000;
@@ -347,7 +347,7 @@ function regenerateEnergy() {
 
     state.energy = Math.min(
         maxEnergy,
-        state.energy + (state.bossMode ? 0.13 : 0.10)
+        state.energy + (state.bossMode ? 0.45 : 0.35)
     );
 
     updateEnergyUI();
