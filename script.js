@@ -39,7 +39,7 @@ const rightBtn = document.getElementById("right-btn");
 const fireBtn = document.getElementById("fire-btn");
 const mobileEmpBtn = document.getElementById("mobile-emp-btn");
 
-const isMobile = window.matchMedia("(max-width: 700px)").matches;
+const phoneMode = window.matchMedia("(max-width: 700px)").matches;
 
 const state = {
     running: false,
@@ -359,7 +359,7 @@ function regenerateEnergy() {
     const delta = (now - lastEnergyTime) / 1000;
     lastEnergyTime = now;
 
-    if (isMobile) {
+    if (phoneMode) {
         state.energy = Math.min(
             maxEnergy,
             state.energy + 22 * delta
