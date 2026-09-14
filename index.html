@@ -5,69 +5,52 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Nebula Strike</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+    <link rel="stylesheet" href="style.css">
 
 </head>
-
 
 <body>
 
 <main class="game">
 
+    <!-- START SCREEN -->
 
-    <!-- =====================================================
-         START SCREEN
-         ===================================================== -->
-
-    <section
-        id="start-screen"
-        class="screen"
-    >
+    <section id="start-screen" class="screen">
 
         <div class="start-box">
 
-            <p class="tag">
-                DEEP SPACE COMBAT
-            </p>
+            <p class="tag">DEEP SPACE COMBAT</p>
 
-            <h1>
-                NEBULA STRIKE
-            </h1>
+            <h1>NEBULA STRIKE</h1>
 
-            <p>
+            <p class="subtitle">
                 Survive the Nebula
             </p>
 
-
             <div class="controls">
 
-                <span>
-                    ← → / A D &nbsp; MOVE
-                </span>
-
-                <span>
-                    SPACE &nbsp; SHOOT
-                </span>
-
-                <span>
-                    E &nbsp; EMP
-                </span>
+                <span>A / D</span>
+                <span>SPACE</span>
+                <span>E</span>
+                <span>P</span>
 
             </div>
 
+            <div class="control-text">
+
+                <span>MOVE</span>
+                <span>FIRE</span>
+                <span>EMP</span>
+                <span>PAUSE</span>
+
+            </div>
 
             <button id="start-btn">
-                START GAME
+                START MISSION
             </button>
 
         </div>
@@ -75,217 +58,122 @@
     </section>
 
 
+    <!-- GAME SCREEN -->
 
-    <!-- =====================================================
-         GAME SCREEN
-         ===================================================== -->
+    <section id="game-screen" class="screen">
 
-    <section
-        id="game-screen"
-        class="screen"
-    >
-
-
-        <!-- =================================================
-             TOP HUD
-             ================================================= -->
+        <!-- TOP HUD -->
 
         <div class="hud">
 
-
             <div class="hud-item">
-
-                <span>
-                    Score
-                </span>
-
-                <strong id="score">
-                    0
-                </strong>
-
+                <span>Score</span>
+                <strong id="score">0</strong>
             </div>
 
-
             <div class="hud-item">
-
-                <span>
-                    Wave
-                </span>
-
-                <strong id="wave">
-                    1
-                </strong>
-
+                <span>Wave</span>
+                <strong id="wave">1</strong>
             </div>
 
-
             <div class="hud-item">
-
-                <span>
-                    Lives
-                </span>
-
-                <strong id="lives">
-                    3
-                </strong>
-
+                <span>Lives</span>
+                <strong id="lives">3</strong>
             </div>
 
-
             <div class="hud-item">
-
-                <span>
-                    Combo
-                </span>
-
-                <strong id="combo">
-                    x1
-                </strong>
-
+                <span>Combo</span>
+                <strong id="combo">x1</strong>
             </div>
 
-
-            <!-- Added for enemy system -->
-
             <div class="hud-item">
-
-                <span>
-                    Enemies
-                </span>
-
-                <strong id="enemy-count">
-                    0
-                </strong>
-
+                <span>Hostiles</span>
+                <strong id="enemy-count">0</strong>
             </div>
-
 
         </div>
 
 
+        <!-- PAUSE BUTTON -->
 
-        <!-- =================================================
-             MISSION
-             ================================================= -->
+        <button id="pause-btn">
+            PAUSE [P]
+        </button>
+
+
+        <!-- MISSION -->
 
         <div class="mission">
 
-            <span>
-
-                MISSION:
+            <div>
+                <small>PRIMARY OBJECTIVE</small>
 
                 <strong id="mission-text">
                     Destroy 10 enemies
                 </strong>
+            </div>
 
-            </span>
-
-
-            <span id="mission-progress">
+            <strong id="mission-progress">
                 0 / 10
-            </span>
+            </strong>
 
         </div>
 
 
+        <!-- BOSS HUD -->
 
-        <!-- =================================================
-             BOSS HUD
-             ================================================= -->
-
-        <div
-            id="boss-hud"
-            class="boss-hud"
-        >
+        <div id="boss-hud" class="boss-hud">
 
             <div class="boss-title">
-                BOSS
+                ⚠ BOSS SYSTEM ⚠
             </div>
 
-
             <div class="boss-bar">
-
                 <div id="boss-fill"></div>
-
             </div>
 
         </div>
 
 
+        <!-- GAME AREA -->
 
-        <!-- =================================================
-             GAME AREA
-             ================================================= -->
+        <div id="game-area" class="game-area">
 
-        <div
-            class="game-area"
-            id="game-area"
-        >
+            <div class="space-glow"></div>
 
-
-            <!-- PLAYER -->
-
-            <div
-                class="player"
-                id="player"
-            >
+            <div class="player" id="player">
                 🚀
             </div>
-
-
-            <!-- EMP EFFECT -->
 
             <div
                 class="emp-effect"
                 id="emp-effect"
             ></div>
 
-
         </div>
 
 
-
-        <!-- =================================================
-             BOTTOM HUD
-             ================================================= -->
+        <!-- BOTTOM HUD -->
 
         <div class="bottom-hud">
-
-
-            <!-- ENERGY -->
 
             <div class="meter">
 
                 <div class="meter-title">
-
-                    <span>
-                        Energy
-                    </span>
-
-                    <strong id="energy-value">
-                        100%
-                    </strong>
-
+                    <span>Energy</span>
+                    <strong id="energy-value">100%</strong>
                 </div>
 
-
                 <div class="bar">
-
                     <div id="energy-fill"></div>
-
                 </div>
 
             </div>
 
 
-
-            <!-- EMP -->
-
             <div class="emp-status">
 
-                <span>
-                    EMP
-                </span>
+                <span>EMP</span>
 
                 <strong id="emp-status">
                     READY [E]
@@ -294,48 +182,58 @@
             </div>
 
 
-
-            <!-- SHIELD -->
-
             <div class="meter">
 
                 <div class="meter-title">
-
-                    <span>
-                        Shield
-                    </span>
-
-                    <strong id="shield-value">
-                        100%
-                    </strong>
-
+                    <span>Shield</span>
+                    <strong id="shield-value">100%</strong>
                 </div>
 
-
                 <div class="bar shield-bar">
-
                     <div id="shield-fill"></div>
-
                 </div>
 
             </div>
 
-
         </div>
-
 
     </section>
 
 
+    <!-- PAUSE SCREEN -->
 
-    <!-- =====================================================
-         GAME OVER SCREEN
-         ===================================================== -->
+    <section id="pause-screen" class="pause-screen">
 
-    <section
-        id="game-over"
-        class="screen"
-    >
+        <div class="pause-box">
+
+            <p class="tag">
+                SYSTEM PAUSED
+            </p>
+
+            <h2>
+                GAME PAUSED
+            </h2>
+
+            <p class="pause-text">
+                Mission is on hold
+            </p>
+
+            <button id="resume-btn">
+                RESUME GAME
+            </button>
+
+            <div class="pause-controls">
+                Press P to resume
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- GAME OVER -->
+
+    <section id="game-over" class="screen">
 
         <div class="end-box">
 
@@ -343,39 +241,23 @@
                 MISSION FAILED
             </p>
 
-
             <h2>
                 GAME OVER
             </h2>
 
-
             <div class="final-stats">
 
-
                 <p>
-
                     Score
-
-                    <strong id="final-score">
-                        0
-                    </strong>
-
+                    <strong id="final-score">0</strong>
                 </p>
-
 
                 <p>
-
                     Wave
-
-                    <strong id="final-wave">
-                        1
-                    </strong>
-
+                    <strong id="final-wave">1</strong>
                 </p>
-
 
             </div>
-
 
             <button id="restart-btn">
                 PLAY AGAIN
@@ -385,22 +267,11 @@
 
     </section>
 
-
 </main>
 
 
-
-<!-- =========================================================
-     JAVASCRIPT
-     ========================================================= -->
-
-<!-- Teammate / player system -->
 <script src="script.js"></script>
-
-<!-- Ishan / enemy + progression system -->
 <script src="enemy.js"></script>
 
-
 </body>
-
 </html>
