@@ -39,6 +39,8 @@ const rightBtn = document.getElementById("right-btn");
 const fireBtn = document.getElementById("fire-btn");
 const mobileEmpBtn = document.getElementById("mobile-emp-btn");
 
+const isMobile = window.matchMedia("(max-width: 700px)").matches;
+
 const state = {
     running: false,
     paused: false,
@@ -72,6 +74,7 @@ const maxShield = 100;
 const rapidFireDuration = 5000;
 
 let fireTimer = null;
+let lastEnergyTime = Date.now();
 
 function startGame() {
     stopFiring();
@@ -93,6 +96,8 @@ function startGame() {
     state.rapidFireTimer = 0;
     state.bossMode = false;
     state.keys.Space = false;
+
+    lastEnergyTime = Date.now();
 
     clearBullets();
 
@@ -129,6 +134,8 @@ function togglePause() {
     if (state.paused) {
         stopFiring();
         state.keys.Space = false;
+    } else {
+        lastEnergyTime = Date.now();
     }
 
     pauseScreen.style.display = state.paused ? "flex" : "none";
@@ -343,12 +350,26 @@ function clearBullets() {
 }
 
 function regenerateEnergy() {
-    if (!state.running || state.paused) return;
+    if (!state.running || state.paused) {
+        lastEnergyTime = Date.now();
+        return;
+    }
 
-    state.energy = Math.min(
-        maxEnergy,
-        state.energy + (state.bossMode ? 0.45 : 0.35)
-    );
+    const now = Date.now();
+    const delta = (now - lastEnergyTime) / 1000;
+    lastEnergyTime = now;
+
+    if (isMobile) {
+        state.energy = Math.min(
+            maxEnergy,
+            state.energy + 22 * delta
+        );
+    } else {
+        state.energy = Math.min(
+            maxEnergy,
+            state.energy + (state.bossMode ? 0.45 : 0.35)
+        );
+    }
 
     updateEnergyUI();
 }
