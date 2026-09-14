@@ -4,9 +4,12 @@ const gameArea = document.getElementById("game-area");
 const startScreen = document.getElementById("start-screen");
 const gameScreen = document.getElementById("game-screen");
 const gameOverScreen = document.getElementById("game-over");
+const victoryScreen = document.getElementById("victory-screen");
 
 const startBtn = document.getElementById("start-btn");
 const restartBtn = document.getElementById("restart-btn");
+const winScore = document.getElementById("win-score");
+const winRestartBtn = document.getElementById("win-restart-btn");
 const pauseBtn = document.getElementById("pause-btn");
 const resumeBtn = document.getElementById("resume-btn");
 const pauseScreen = document.getElementById("pause-screen");
@@ -15,977 +18,383 @@ const scoreUI = document.getElementById("score");
 const waveUI = document.getElementById("wave");
 const livesUI = document.getElementById("lives");
 const comboUI = document.getElementById("combo");
+const enemyCountUI = document.getElementById("enemy-count");
 
 const energyFill = document.getElementById("energy-fill");
 const energyValue = document.getElementById("energy-value");
-
 const shieldFill = document.getElementById("shield-fill");
 const shieldValue = document.getElementById("shield-value");
-
 const empStatus = document.getElementById("emp-status");
 const empEffect = document.getElementById("emp-effect");
 
-const missionProgress = document.getElementById("mission-progress");
+const missionLabel = document.getElementById("mission-label");
 const missionText = document.getElementById("mission-text");
+const missionProgress = document.getElementById("mission-progress");
 
 const finalScore = document.getElementById("final-score");
-const finalWave = document.getElementById("final-wave"); 
-
-// 2. GAME STATE
+const finalWave = document.getElementById("final-wave");
 
 const state = {
-
-    // Is the game currently running?
-    running: false,
-    paused: false,
-
-    // Player horizontal position
-    playerX: 50,
-
-    // Main game information
-    score: 0,
-    wave: 1,
-    lives: 3,
-    combo: 1,
-
-    // Energy
-    energy: 100,
-
-    // Shield
-    shield: 100,
-
-    // EMP
-    empReady: true,
-
-    // Shooting
-    lastShot: 0,
-
-    // Player bullets
-    bullets: [],
-
-    // Keyboard keys currently being pressed
-    keys: {},
-
-    // Mission
-    missionKills: 0,
-    missionTarget: 20,
-    missionComplete: false,
-
-    // Rapid fire power-up
-    rapidFire: false,
-    rapidFireTimer: 0
+    running:false,
+    paused:false,
+    playerX:50,
+    score:0,
+    wave:1,
+    lives:3,
+    combo:1,
+    energy:100,
+    shield:100,
+    empReady:true,
+    lastShot:0,
+    bullets:[],
+    keys:{},
+    waveKills:0,
+    waveTarget:10,
+    rapidFire:false,
+    rapidFireTimer:0,
+    bossMode:false
 };
-// 3. CONSTANTS
 
+const waveTargets = {1:10, 2:15, 3:20, 4:25};
 const playerSpeed = 0.75;
-
 const bulletSpeed = 1.8;
-
 const normalShotDelay = 180;
-
-const rapidShotDelay = 70;
-
+const bossShotDelay = 120;
+const rapidShotDelay = 75;
 const shotCost = 4;
-
 const maxEnergy = 100;
-
 const maxShield = 100;
-
 const rapidFireDuration = 5000;
 
-// 4. START GAME
-
-function startGame() {
-
-    // Start the game
+function startGame(){
     state.running = true;
     state.paused = false;
-
-    // Reset player
     state.playerX = 50;
-
-    // Reset score
     state.score = 0;
-
-    // Reset wave
     state.wave = 1;
-
-    // Reset lives
     state.lives = 3;
-
-    // Reset combo
     state.combo = 1;
-
-    // Reset energy
     state.energy = 100;
-
-    // Reset shield
     state.shield = 100;
-
-    // Reset EMP
     state.empReady = true;
-
-    // Reset mission
-    state.missionKills = 0;
-    state.missionTarget = 20;
-    state.missionComplete = false;
-
-    // Reset rapid fire
+    state.lastShot = 0;
+    state.waveKills = 0;
+    state.waveTarget = 10;
     state.rapidFire = false;
     state.rapidFireTimer = 0;
+    state.bossMode = false;
 
-    // Remove old player bullets
     clearBullets();
+    player.style.left = "50%";
+    pauseScreen.style.display = "none";
+    startScreen.style.display = "none";
+    gameOverScreen.style.display = "none";
+    victoryScreen.style.display = "none";
+    gameScreen.style.display = "flex";
 
-    // Reset enemy system
-
-    if (
-        window.NebulaGame &&
-        typeof window.NebulaGame.resetEnemySystem === "function"
-    ) {
-
+    if (window.NebulaGame && typeof window.NebulaGame.resetEnemySystem === "function") {
         window.NebulaGame.resetEnemySystem();
-
     }
 
-    // Put player in the middle
-    player.style.left = "50%";
-
-
-    // Update all UI
+    updateMission();
     updateUI();
-
-
-    // Show game screen
-    startScreen.style.display = "none";
-
-    gameOverScreen.style.display = "none";
-
-    gameScreen.style.display = "flex";
 }
 
-
-// Start button
-startBtn.addEventListener("click", startGame);
-
-
-// Restart button
-restartBtn.addEventListener("click", startGame);
-
-function togglePause() {
-    if (!state.running || state.paused) return;
+function togglePause(){
+    if (!state.running) return;
     state.paused = !state.paused;
     pauseScreen.style.display = state.paused ? "flex" : "none";
 }
 
+startBtn.addEventListener("click", startGame);
+restartBtn.addEventListener("click", startGame);
+winRestartBtn.addEventListener("click", startGame);
 pauseBtn.addEventListener("click", togglePause);
 resumeBtn.addEventListener("click", togglePause);
 
-// 5. KEYBOARD CONTROLS
-
-document.addEventListener("keydown", function(event) {
-
-    // Convert the key to lowercase
+document.addEventListener("keydown", function(event){
     const key = event.key.toLowerCase();
+    state.keys[key] = true;
+
+    if (key === "enter" && !state.running) {
+        startGame();
+        return;
+    }
 
     if (key === "p") {
         togglePause();
         return;
     }
 
-    // Remember that this key is being pressed
-    state.keys[key] = true;
-
-    // SPACE = SHOOT
-
     if (event.code === "Space") {
-
         event.preventDefault();
-
-        if (state.paused) return;
-
-        shoot();
-
+        if (!state.paused) shoot();
     }
 
-    // E = EMP
-    
-    if (key === "e") {
-
-        if (!state.paused) useEMP();
-
+    if (key === "e" && !state.paused) {
+        useEMP();
     }
 });
 
-
-document.addEventListener("keyup", function(event) {
-
-    const key = event.key.toLowerCase();
-
-    // Key is no longer being pressed
-    state.keys[key] = false;
-
+document.addEventListener("keyup", function(event){
+    state.keys[event.key.toLowerCase()] = false;
 });
 
-// 6. PLAYER MOVEMENT
+function updatePlayer(){
+    if (!state.running || state.paused) return;
 
+    if (state.keys["arrowleft"] || state.keys["a"]) state.playerX -= playerSpeed;
+    if (state.keys["arrowright"] || state.keys["d"]) state.playerX += playerSpeed;
 
-function updatePlayer() {
-
-    // Don't move if game isn't running
-    if (!state.running) return;
-
-
-    // Move left
-    if (
-        state.keys["arrowleft"] ||
-        state.keys["a"]
-    ) {
-
-        state.playerX -= playerSpeed;
-
-    }
-
-    // Move right
-    if (
-        state.keys["arrowright"] ||
-        state.keys["d"]
-    ) {
-
-        state.playerX += playerSpeed;
-    }
-
-    // Don't allow player to leave left side
-    if (state.playerX < 5) {
-
-        state.playerX = 5;
-    }
-
-    // Don't allow player to leave right side
-    if (state.playerX > 95) {
-
-        state.playerX = 95;
-    }
-
-    // Apply position to HTML element
+    state.playerX = Math.max(5, Math.min(95, state.playerX));
     player.style.left = state.playerX + "%";
 }
 
-// 7. PLAYER SHOOTING
-function shoot() {
-
+function shoot(){
     if (!state.running || state.paused) return;
 
-
-    // Get current time
     const now = Date.now();
+    let delay = normalShotDelay;
+    if (state.bossMode) delay = bossShotDelay;
+    if (state.rapidFire) delay = rapidShotDelay;
 
-    // RAPID FIRE
+    if (now - state.lastShot < delay || state.energy < shotCost) return;
 
-    let shotDelay = normalShotDelay;
-
-    if (state.rapidFire) {
-
-        shotDelay = rapidShotDelay;
-
-    }
-    // Prevent shooting too quickly
-    if (now - state.lastShot < shotDelay) {
-
-        return;
-
-    }
-    // Not enough energy
-    if (state.energy < shotCost) {
-
-        return;
-
-    }
-
-    // Remember shooting time
     state.lastShot = now;
-
-
-    // Use energy
     state.energy -= shotCost;
 
-    // CREATE BULLET HTML
+    const positions = state.bossMode ? [-3.5, 0, 3.5] : [0];
 
-    const bulletElement = document.createElement("div");
+    positions.forEach(function(offset){
+        const bulletElement = document.createElement("div");
+        bulletElement.className = "bullet";
+        bulletElement.style.left = (state.playerX + offset) + "%";
+        bulletElement.style.bottom = "75px";
+        if (state.bossMode) bulletElement.style.height = "22px";
+        gameArea.appendChild(bulletElement);
 
-    bulletElement.className = "bullet";
-
-    bulletElement.style.left =
-        state.playerX + "%";
-
-    bulletElement.style.bottom =
-        "75px";
-
-
-    // Put bullet inside game area
-    gameArea.appendChild(bulletElement);
-
-    // SAVE BULLET DATA
-
-    state.bullets.push({
-
-        element: bulletElement,
-
-        x: state.playerX,
-
-        y: 88,
-
-        damage: 1
-
+        state.bullets.push({
+            element:bulletElement,
+            x:state.playerX + offset,
+            y:88,
+            damage:1
+        });
     });
 
-    // Update energy display
     updateUI();
 }
 
-// 8. UPDATE PLAYER BULLETS
-
-function updateBullets() {
-
-    // Go backwards through the array
-    // This makes deleting bullets safer.
-    for (
-        let i = state.bullets.length - 1;
-        i >= 0;
-        i--
-    ) {
-
+function updateBullets(){
+    for (let i = state.bullets.length - 1; i >= 0; i--){
         const bullet = state.bullets[i];
-
-
-        // Move bullet upward
         bullet.y -= bulletSpeed;
-
-
-        // Update bullet position
-        bullet.element.style.left =
-            bullet.x + "%";
-
-        bullet.element.style.top =
-            bullet.y + "%";
-
-
-        // Remove bullet if it leaves screen
-        if (bullet.y < -5) {
-
-            removeBullet(bullet);
-
-        }
-
+        bullet.element.style.left = bullet.x + "%";
+        bullet.element.style.top = bullet.y + "%";
+        if (bullet.y < -5) removeBullet(bullet);
     }
 }
 
-// 9. REMOVE ONE BULLET
-
-function removeBullet(bullet) {
-
-    // Remove HTML element
-    if (bullet.element.parentNode) {
-
-        bullet.element.remove();
-
-    }
-
-    // Find bullet inside array
-    const index =
-        state.bullets.indexOf(bullet);
-
-
-    // Remove from array
-    if (index !== -1) {
-
-        state.bullets.splice(index, 1);
-
-    }
+function removeBullet(bullet){
+    if (bullet.element.parentNode) bullet.element.remove();
+    const index = state.bullets.indexOf(bullet);
+    if (index !== -1) state.bullets.splice(index, 1);
 }
 
-// 10. REMOVE ALL PLAYER BULLETS
-function clearBullets() {
-
-    state.bullets.forEach(function(bullet) {
-
-        if (bullet.element.parentNode) {
-
-            bullet.element.remove();
-
-        }
-
+function clearBullets(){
+    state.bullets.forEach(function(bullet){
+        if (bullet.element.parentNode) bullet.element.remove();
     });
-    // Empty array
     state.bullets = [];
 }
 
-// 11. ENERGY REGENERATION
-
-function regenerateEnergy() {
-
-    if (!state.running) return;
-
-
-    // Slowly regenerate energy
-    if (state.energy < maxEnergy) {
-
-        state.energy += 0.08;
-
-    }
-    // Prevent energy from going above maximum
-    if (state.energy > maxEnergy) {
-
-        state.energy = maxEnergy;
-
-    }
-
-    // Update energy UI
+function regenerateEnergy(){
+    if (!state.running || state.paused) return;
+    state.energy = Math.min(maxEnergy, state.energy + (state.bossMode ? 0.13 : 0.10));
     updateEnergyUI();
 }
-// 12. ENERGY UI
-function updateEnergyUI() {
 
+function updateEnergyUI(){
     const value = Math.round(state.energy);
-
-
-    // Change bar width
-    energyFill.style.width =
-        value + "%";
-
-
-    // Change text
-    energyValue.textContent =
-        value + "%";
+    energyFill.style.width = value + "%";
+    energyValue.textContent = value + "%";
 }
 
-// 13. EMP ABILITY
+function useEMP(){
+    if (!state.running || state.paused || !state.empReady) return;
 
-function useEMP() {
-
-    // Can't use EMP if game isn't running
-    if (!state.running) return;
-
-
-    // Can't use EMP while recharging
-    if (!state.empReady) return;
-
-
-    // EMP is now unavailable
     state.empReady = false;
-
-
-    // Change UI
-    empStatus.textContent =
-        "RECHARGING...";
-
-
-    // Restart EMP animation
+    empStatus.textContent = "RECHARGING...";
     empEffect.classList.remove("active");
-
     void empEffect.offsetWidth;
-
     empEffect.classList.add("active");
 
+    window.dispatchEvent(new CustomEvent("nebula-emp"));
 
-    // Tell enemy system that EMP happened
-    window.dispatchEvent(
-        new CustomEvent("nebula-emp")
-    );
-
-
-    // Recharge after 6 seconds
-    setTimeout(function() {
-
+    setTimeout(function(){
         state.empReady = true;
-
-        empStatus.textContent =
-            "READY [E]";
-
+        if (!state.paused) empStatus.textContent = "READY [E]";
     }, 6000);
 }
 
-// 14. PLAYER DAMAGE
-
-function damagePlayer(amount) {
-
-    // Ignore damage when game isn't running
+function damagePlayer(amount){
     if (!state.running) return;
 
-    // SHIELD TAKES DAMAGE FIRST
-
     if (state.shield > 0) {
-
-        state.shield -= amount * 20;
-
-
-        // Prevent negative shield
-        if (state.shield < 0) {
-
-            state.shield = 0;
-
-        }
-    }
-
-    // IF SHIELD IS ALREADY ZERO
-
-    else {
-
+        state.shield -= amount * 12;
+        if (state.shield < 0) state.shield = 0;
+    } else {
         loseLife();
-
     }
 
-    // Damage animation
-    player.classList.remove(
-        "player-damaged"
-    );
-
+    player.classList.remove("player-damaged");
     void player.offsetWidth;
-
-    player.classList.add(
-        "player-damaged"
-    );
-
-
-    // Getting hit resets combo
+    player.classList.add("player-damaged");
     state.combo = 1;
-
-
-    // Update interface
     updateUI();
 }
 
-// 15. LOSE LIFE
-
-function loseLife() {
-
+function loseLife(){
     state.lives--;
-
-    // Give player a fresh shield
     state.shield = maxShield;
-
-
-    // If no lives remain
-    if (state.lives <= 0) {
-
-        endGame();
-
-    }
+    if (state.lives <= 0) endGame();
 }
 
-// 16. SHIELD REGENERATION
-function regenerateShield() {
-
-    if (!state.running) return;
-
-
-    // Slowly regenerate shield
-    if (state.shield < maxShield) {
-
-        state.shield += 0.03;
-
-    }
-
-    // Prevent shield from going above maximum
-    if (state.shield > maxShield) {
-
-        state.shield = maxShield;
-
-    }
-
-    // Update shield UI
-    shieldFill.style.width =
-        state.shield + "%";
-
-    shieldValue.textContent =
-        Math.round(state.shield) + "%";
+function regenerateShield(){
+    if (!state.running || state.paused) return;
+    state.shield = Math.min(maxShield, state.shield + (state.bossMode ? 0.08 : 0.05));
+    shieldFill.style.width = state.shield + "%";
+    shieldValue.textContent = Math.round(state.shield) + "%";
 }
 
-// 17. SCORE
-
-function addScore(amount) {
-
-    // Combo multiplies score
-    state.score +=
-        amount * state.combo;
-
-
-    // Update score UI
+function addScore(amount){
+    state.score += amount * state.combo;
     updateScoreUI();
 }
 
-// 18. REGISTER ENEMY KILL
+function registerEnemyKill(points){
+    state.waveKills++;
 
-function registerEnemyKill(points) {
+    if (state.waveKills % 5 === 0) state.combo++;
 
-    // Count enemy kill for mission
-    state.missionKills++;
-
-
-    // Every 5 kills increases combo
-    if (state.missionKills % 5 === 0) {
-
-        state.combo++;
-
-    }
-
-    // Give score
     addScore(points);
-
-
-    // Update mission
-    updateMissionUI();
+    updateMission();
 }
 
-// 19. SCORE UI
-
-function updateScoreUI() {
-
-    scoreUI.textContent =
-        state.score;
-
-    comboUI.textContent =
-        "x" + state.combo;
+function updateScoreUI(){
+    scoreUI.textContent = state.score;
+    comboUI.textContent = "x" + state.combo;
 }
 
-// 20. MISSION
+function setWave(wave){
+    state.wave = wave;
+    state.waveKills = 0;
+    state.waveTarget = waveTargets[wave] || 25;
+    state.bossMode = wave >= 5;
+    waveUI.textContent = wave;
+    updateMission();
+}
 
-function updateMissionUI() {
-
-    if (state.missionComplete) {
-        missionProgress.textContent = "✓ COMPLETE";
-        missionText.textContent = "OBJECTIVE COMPLETE";
+function updateMission(){
+    if (state.wave >= 5) {
+        missionLabel.textContent = "FINAL OBJECTIVE";
+        missionText.textContent = "DEFEAT THE BOSS";
+        missionProgress.textContent = "BOSS";
         return;
     }
 
-    missionProgress.textContent =
-        state.missionKills + " / " + state.missionTarget;
-
-    if (state.missionKills >= state.missionTarget) {
-        state.missionComplete = true;
-        state.score += 1000;
-        missionProgress.textContent = "✓ COMPLETE";
-        missionText.textContent = "OBJECTIVE COMPLETE";
-        updateScoreUI();
-    }
+    missionLabel.textContent = "WAVE " + state.wave + " OBJECTIVE";
+    missionText.textContent = "Destroy " + state.waveTarget + " enemies";
+    missionProgress.textContent = state.waveKills + " / " + state.waveTarget;
 }
 
-// 21. WAVE
-function setWave(wave) {
-
-    state.wave = wave;
-
-    waveUI.textContent =
-        wave;
-}
-
-// 22. RAPID FIRE UPDATE
-function updateRapidFire() {
-
-    // Rapid fire isn't active
+function updateRapidFire(){
     if (!state.rapidFire) return;
-
-
-    // Reduce timer
     state.rapidFireTimer -= 16.67;
-
-
-    // Rapid fire finished
     if (state.rapidFireTimer <= 0) {
-
         state.rapidFire = false;
-
         state.rapidFireTimer = 0;
-
     }
 }
 
-// 23. GAME OVER
-
-function endGame() {
-
-    // Stop game
+function endGame(){
     state.running = false;
-
-
-    // Stop rapid fire
-    state.rapidFire = false;
-
-    state.rapidFireTimer = 0;
-
-
-    // Remove player bullets
+    state.paused = false;
+    state.bossMode = false;
     clearBullets();
-
-
-    // Show final statistics
-    finalScore.textContent =
-        state.score;
-
-    finalWave.textContent =
-        state.wave;
-
-
-    // Hide game
-    gameScreen.style.display =
-        "none";
-
-
-    // Show game over
-    gameOverScreen.style.display =
-        "flex";
+    finalScore.textContent = state.score;
+    finalWave.textContent = state.wave;
+    gameScreen.style.display = "none";
     pauseScreen.style.display = "none";
+    gameOverScreen.style.display = "flex";
 }
 
-// 24. UPDATE ALL UI
-function updateUI() {
-
-    // Score
-    scoreUI.textContent =
-        state.score;
-
-
-    // Wave
-    waveUI.textContent =
-        state.wave;
-
-
-    // Lives
-    livesUI.textContent =
-        state.lives;
-
-
-    // Combo
-    comboUI.textContent =
-        "x" + state.combo;
-
-
-    // Energy
+function updateUI(){
+    scoreUI.textContent = state.score;
+    waveUI.textContent = state.wave;
+    livesUI.textContent = state.lives;
+    comboUI.textContent = "x" + state.combo;
+    enemyCountUI.textContent = enemyCountUI.textContent;
     updateEnergyUI();
-
-
-    // Shield
-    shieldFill.style.width =
-        state.shield + "%";
-
-    shieldValue.textContent =
-        Math.round(state.shield) + "%";
-
-
-    // EMP
-    if (state.empReady) {
-
-        empStatus.textContent =
-            "READY [E]";
-
-    }
-    else {
-
-        empStatus.textContent =
-            "RECHARGING...";
-
-    }
-
-
-    // Mission
-    updateMissionUI();
+    shieldFill.style.width = state.shield + "%";
+    shieldValue.textContent = Math.round(state.shield) + "%";
+    empStatus.textContent = state.empReady ? "READY [E]" : "RECHARGING...";
+    updateMission();
 }
-// 25. CONNECTION WITH ISHAN'S ENEMY SYSTEM
 
 window.NebulaGame = {
-
-    // PLAYER POSITION
-
-    getPlayerPosition: function() {
-
-        return {
-
-            x: state.playerX,
-
-            y: 88
-
-        };
-
+    getPlayerPosition:function(){ return {x:state.playerX,y:88}; },
+    damagePlayer:function(amount){ damagePlayer(amount); },
+    addScore:function(amount){ addScore(amount); },
+    registerEnemyKill:function(points){ registerEnemyKill(points); },
+    getPlayerBullets:function(){
+        return state.bullets.map(function(bullet){
+            return {
+                x:bullet.x,
+                y:bullet.y,
+                damage:bullet.damage,
+                hit:function(){ removeBullet(bullet); },
+                destroy:function(){ removeBullet(bullet); }
+            };
+        });
     },
-
-    // DAMAGE PLAYER
-    damagePlayer: function(amount) {
-
-        damagePlayer(amount);
-
-    },
-
-    // ADD SCORE
-
-    addScore: function(amount) {
-
-        addScore(amount);
-
-    },
-
-    // REGISTER ENEMY KILL
-    registerEnemyKill: function(points) {
-
-        registerEnemyKill(points);
-
-    },
-
-    // GET PLAYER BULLETS
-
-    getPlayerBullets: function() {
-
-        return state.bullets.map(
-            function(bullet) {
-
-                return {
-
-                    x: bullet.x,
-
-                    y: bullet.y,
-
-                    damage: bullet.damage,
-
-
-                    // New function used by enemy system
-                    hit: function() {
-
-                        removeBullet(bullet);
-
-                    },
-
-
-                    // Keep destroy as an alias
-                    destroy: function() {
-
-                        removeBullet(bullet);
-
-                    }
-
-                };
-
-            }
-        );
-
-    },
-
-    // CHECK IF GAME IS RUNNING
-    isRunning: function() {
-        return state.running;
-    },
-
-    isPaused: function() {
-        return state.paused;
-    },
-
-    // COLLECT POWER-UP
-
-    collectPowerUp: function(type) {
-
-
-        // ENERGY POWER-UP
-        if (type === "energy") {
-
-            state.energy =
-                Math.min(
-                    maxEnergy,
-                    state.energy + 35
-                );
-
-        }
-
-
-        // SHIELD POWER-UP
-        if (type === "shield") {
-
-            state.shield =
-                Math.min(
-                    maxShield,
-                    state.shield + 40
-                );
-
-        }
-
-
-        // RAPID FIRE POWER-UP
-        if (type === "rapid") {
-
-            state.rapidFire = true;
-
-            state.rapidFireTimer =
-                rapidFireDuration;
-
-        }
-
-
-        // EMP POWER-UP
-        if (type === "emp") {
-
-            state.empReady = true;
-
-            empStatus.textContent =
-                "READY [E]";
-
-        }
-
-
-        // Update interface
+    isRunning:function(){ return state.running; },
+    isPaused:function(){ return state.paused; },
+    setWave:function(wave){ setWave(wave); },
+    setBossMode:function(active){
+        state.bossMode = active;
         updateUI();
-
     },
-
-    // SET WAVE
-
-    setWave: function(wave) {
-
-        setWave(wave);
-
+    collectPowerUp:function(type){
+        if (type === "energy") state.energy = Math.min(maxEnergy, state.energy + 35);
+        if (type === "shield") state.shield = Math.min(maxShield, state.shield + 40);
+        if (type === "rapid") { state.rapidFire = true; state.rapidFireTimer = rapidFireDuration; }
+        if (type === "emp") state.empReady = true;
+        updateUI();
     },
-
-    // RESET ENEMY SYSTEM
-    resetEnemySystem: function() {
-
-        if (
-            typeof window.resetEnemySystem ===
-            "function"
-        ) {
-
-            window.resetEnemySystem();
-        }
+    resetEnemySystem:function(){
+        if (typeof window.resetEnemySystem === "function") window.resetEnemySystem();
+    },
+    winGame:function(){
+        state.running = false;
+        state.paused = false;
+        state.bossMode = false;
+        clearBullets();
+        winScore.textContent = state.score;
+        gameScreen.style.display = "none";
+        pauseScreen.style.display = "none";
+        victoryScreen.style.display = "flex";
     }
 };
 
-// 26. MAIN PLAYER GAME LOOP
-function gameLoop() {
-
-    // Only update gameplay while running
-    if (state.running && !state.paused) {
-
-        // Move player
+function gameLoop(){
+    if (state.running && !state.paused){
         updatePlayer();
-
-
-        // Move player bullets
         updateBullets();
-
-
-        // Regenerate energy
         regenerateEnergy();
-
-
-        // Regenerate shield
         regenerateShield();
-
-
-        // Update rapid fire timer
         updateRapidFire();
-
     }
-
-
-    // Ask browser to run this again
     requestAnimationFrame(gameLoop);
 }
-
-// 27. START MAIN LOOP
 
 gameLoop();

@@ -1,112 +1,137 @@
 const area = document.getElementById("game-area");
-const enemyCountUI = document.getElementById("enemy-count");
+const enemyCountDisplay = document.getElementById("enemy-count");
 const bossHUD = document.getElementById("boss-hud");
 const bossFill = document.getElementById("boss-fill");
+const bossPhaseUI = document.getElementById("boss-phase");
 
 const enemyState = {
-    enemies: [],
-    bullets: [],
-    powerUps: [],
-    boss: null,
-    wave: 1,
-    spawnTimer: 0,
-    spawned: 0,
-    quota: 10,
-    bossActive: false,
-    bossDefeated: false,
-    running: false
+    enemies: [], bullets: [], powerUps: [], boss: null,
+    wave: 1, kills: 0, spawnTimer: 0, maxAlive: 5,
+    bossActive: false, bossPhase: 1, running: false
 };
 
 const waveData = {
-    1: { quota: 10, delay: 48 },
-    2: { quota: 15, delay: 44 },
-    3: { quota: 20, delay: 40 },
-    4: { quota: 25, delay: 36 }
+    1: { target: 10, delay: 85, maxAlive: 5 },
+    2: { target: 15, delay: 75, maxAlive: 6 },
+    3: { target: 20, delay: 65, maxAlive: 7 },
+    4: { target: 25, delay: 55, maxAlive: 8 }
 };
 
 const types = {
-    drone: { hp:1, speed:.28, points:100, shoot:false },
-    shooter: { hp:2, speed:.22, points:200, shoot:true },
-    chaser: { hp:2, speed:.25, points:300, shoot:false },
-    tank: { hp:5, speed:.16, points:500, shoot:true }
+    drone: { emoji: "👾", hp: 1, speed: 0.20, points: 100, shoot: false },
+    shooter: { emoji: "🛸", hp: 2, speed: 0.17, points: 200, shoot: true },
+    chaser: { emoji: "👹", hp: 2, speed: 0.21, points: 300, shoot: false },
+    tank: { emoji: "☄️", hp: 5, speed: 0.12, points: 500, shoot: true },
+    bomber: { emoji: "💣", hp: 3, speed: 0.16, points: 450, shoot: false }
 };
 
 function gameRunning() {
-    if (!window.NebulaGame || !window.NebulaGame.isRunning()) return false;
-    if (window.NebulaGame.isPaused && window.NebulaGame.isPaused()) return false;
+    if (!window.NebulaGame) return false;
+    if (!window.NebulaGame.isRunning()) return false;
+    if (typeof window.NebulaGame.isPaused === "function" &&
+        window.NebulaGame.isPaused()) return false;
     return true;
 }
 
-function playerPos() { return window.NebulaGame.getPlayerPosition(); }
-function hurtPlayer(n) { window.NebulaGame.damagePlayer(n); }
-function killEnemy(n) { window.NebulaGame.registerEnemyKill(n); }
+function playerPos() {
+    return window.NebulaGame.getPlayerPosition();
+}
+
+function hurtPlayer(amount) {
+    window.NebulaGame.damagePlayer(amount);
+}
+
+function killEnemy(points) {
+    window.NebulaGame.registerEnemyKill(points);
+}
 
 function waveMessage(text) {
     const msg = document.createElement("div");
     msg.textContent = text;
     msg.style.cssText =
         "position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);" +
-        "font-size:30px;font-weight:bold;color:#ff5577;" +
-        "text-shadow:0 0 15px #ff1744;z-index:100;pointer-events:none;" +
-        "letter-spacing:3px;";
+        "font-size:28px;font-weight:bold;color:#ff5577;" +
+        "text-shadow:0 0 16px #ff1744;z-index:100;pointer-events:none;" +
+        "letter-spacing:3px;white-space:nowrap;";
     area.appendChild(msg);
-    setTimeout(() => msg.remove(),1300);
+
+    setTimeout(() => {
+        if (msg.parentNode) msg.remove();
+    }, 1200);
 }
 
 function chooseType() {
+    const wave = enemyState.wave;
     const r = Math.random();
 
-    if (enemyState.wave >= 4 && r < .10) return "tank";
-    if (enemyState.wave >= 3 && r < .28) return "chaser";
-    if (enemyState.wave >= 2 && r < .50) return "shooter";
+    if (wave === 1) return "drone";
 
-    return "drone";
+    if (wave === 2)
+        return r < 0.6 ? "drone" : "shooter";
+
+    if (wave === 3) {
+        if (r < 0.3) return "drone";
+        if (r < 0.7) return "shooter";
+        return "chaser";
+    }
+
+    if (r < 0.18) return "tank";
+    if (r < 0.40) return "bomber";
+    if (r < 0.68) return "chaser";
+    return "shooter";
 }
 
-function createEnemy(type) {
-    const t = types[type];
-    const el = document.createElement("div");
-    const x = 5 + Math.random() * 90;
+function createEnemy(typeName) {
+    const data = types[typeName];
+    if (!data) return;
 
-    el.className = "enemy enemy-" + type;
-    el.style.left = x + "%";
-    el.style.top = "-8%";
-    area.appendChild(el);
+    const element = document.createElement("div");
+    element.className = "enemy enemy-" + typeName;
+    element.textContent = data.emoji;
+    element.style.position = "absolute";
+    element.style.display = "block";
+    element.style.zIndex = "20";
+    element.style.fontSize = "32px";
+    element.style.lineHeight = "1";
+    element.style.userSelect = "none";
+
+    const x = 5 + Math.random() * 90;
+    element.style.left = x + "%";
+    element.style.top = "-8%";
+    area.appendChild(element);
 
     enemyState.enemies.push({
-        el: el,
-        type: type,
-        x: x,
-        y: -8,
-        hp: t.hp,
-        speed: t.speed,
-        points: t.points,
-        cooldown: 150 + Math.random() * 100
+        element, type: typeName, x, y: -8,
+        hp: data.hp,
+        speed: data.speed + Math.min(0.08, enemyState.wave * 0.01),
+        points: data.points,
+        cooldown: 100 + Math.random() * 100,
+        drift: Math.random() * 6
     });
 }
 
 function spawnEnemy() {
-    if (enemyState.spawned >= enemyState.quota) return;
-    if (enemyState.enemies.length >= 4) return;
-
     createEnemy(chooseType());
-    enemyState.spawned++;
 }
 
 function enemyShoot(enemy) {
+    const player = playerPos();
+    let x = enemy.x;
+
+    if (enemy.type === "shooter")
+        x += (player.x - x) * 0.12;
+
     const bullet = document.createElement("div");
-
     bullet.className = "enemy-bullet";
-    bullet.style.left = enemy.x + "%";
-    bullet.style.top = enemy.y + "%";
-
+    bullet.style.left = x + "%";
+    bullet.style.top = (enemy.y + 4) + "%";
     area.appendChild(bullet);
 
     enemyState.bullets.push({
-        el: bullet,
-        x: enemy.x,
-        y: enemy.y,
-        speed: .24 + enemyState.wave * .01,
+        element: bullet,
+        x,
+        y: enemy.y + 4,
+        speed: 0.24 + enemyState.wave * 0.018,
         damage: 1
     });
 }
@@ -116,34 +141,44 @@ function updateEnemies() {
 
     for (let i = enemyState.enemies.length - 1; i >= 0; i--) {
         const enemy = enemyState.enemies[i];
+        enemy.y += enemy.speed;
 
-        enemy.y += enemy.speed * .65;
+        if (enemy.type === "chaser")
+            enemy.x += (player.x - enemy.x) *
+                (0.003 + enemyState.wave * 0.0004);
 
-        if (enemy.type === "chaser") {
-            enemy.x += (player.x - enemy.x) * .003;
-        }
+        if (enemy.type === "shooter")
+            enemy.x += Math.sin((enemy.y + enemy.drift) * 0.08) * 0.15;
+
+        if (enemy.type === "tank")
+            enemy.x += Math.sin((enemy.y + enemy.drift) * 0.04) * 0.08;
+
+        if (enemy.type === "bomber")
+            enemy.x += (player.x - enemy.x) * 0.0015;
+
+        enemy.x = Math.max(3, Math.min(97, enemy.x));
+        enemy.element.style.left = enemy.x + "%";
+        enemy.element.style.top = enemy.y + "%";
 
         if (enemy.type === "shooter" || enemy.type === "tank") {
-            enemy.x += Math.sin(enemy.y * .08) * .12;
-        }
-
-        enemy.x = Math.max(3,Math.min(97,enemy.x));
-
-        enemy.el.style.left = enemy.x + "%";
-        enemy.el.style.top = enemy.y + "%";
-
-        if (types[enemy.type].shoot) {
             enemy.cooldown--;
 
             if (enemy.cooldown <= 0 && enemy.y > 5 && enemy.y < 65) {
                 enemyShoot(enemy);
-                enemy.cooldown = Math.max(130,250 - enemyState.wave * 5);
+                enemy.cooldown = Math.max(95, 190 - enemyState.wave * 5) +
+                    Math.random() * 30;
             }
+        }
+
+        if (enemy.type === "bomber" && enemy.y > 90) {
+            hurtPlayer(2);
+            removeEnemy(enemy, false);
+            continue;
         }
 
         if (enemy.y > 92) {
             hurtPlayer(1);
-            removeEnemy(enemy,false);
+            removeEnemy(enemy, false);
         }
     }
 }
@@ -153,11 +188,11 @@ function updateEnemyBullets() {
 
     for (let i = enemyState.bullets.length - 1; i >= 0; i--) {
         const bullet = enemyState.bullets[i];
-
         bullet.y += bullet.speed;
-        bullet.el.style.top = bullet.y + "%";
+        bullet.element.style.top = bullet.y + "%";
 
-        if (Math.abs(bullet.x - player.x) < 4 && Math.abs(bullet.y - player.y) < 7) {
+        if (Math.abs(bullet.x - player.x) < 4 &&
+            Math.abs(bullet.y - player.y) < 7) {
             hurtPlayer(bullet.damage);
             removeEnemyBullet(bullet);
         } else if (bullet.y > 105) {
@@ -167,34 +202,39 @@ function updateEnemyBullets() {
 }
 
 function removeEnemyBullet(bullet) {
-    if (bullet.el.parentNode) bullet.el.remove();
+    if (bullet.element.parentNode) bullet.element.remove();
 
     const index = enemyState.bullets.indexOf(bullet);
-    if (index !== -1) enemyState.bullets.splice(index,1);
+    if (index !== -1) enemyState.bullets.splice(index, 1);
 }
 
-function removeEnemy(enemy,reward=true) {
-    if (enemy.el.parentNode) enemy.el.remove();
+function removeEnemy(enemy, reward = true) {
+    if (enemy.element.parentNode) enemy.element.remove();
 
     const index = enemyState.enemies.indexOf(enemy);
-    if (index !== -1) enemyState.enemies.splice(index,1);
+    if (index !== -1) enemyState.enemies.splice(index, 1);
 
     if (reward) {
+        enemyState.kills++;
         killEnemy(enemy.points);
 
-        if (Math.random() < .18) {
-            createPowerUp(enemy.x,enemy.y);
-        }
+        if (Math.random() < 0.12 + enemyState.wave * 0.02)
+            createPowerUp(enemy.x, enemy.y);
+
+        checkWaveComplete();
     }
 }
 
-function damageEnemy(enemy,amount=1) {
+function damageEnemy(enemy, amount = 1) {
     enemy.hp -= amount;
-    enemy.el.classList.add("enemy-hit");
+    enemy.element.classList.add("enemy-hit");
 
-    setTimeout(() => enemy.el.classList.remove("enemy-hit"),120);
+    setTimeout(() => {
+        enemy.element.classList.remove("enemy-hit");
+    }, 100);
 
-    if (enemy.hp <= 0) removeEnemy(enemy);
+    if (enemy.hp <= 0)
+        removeEnemy(enemy);
 }
 
 function checkPlayerBullets() {
@@ -206,8 +246,9 @@ function checkPlayerBullets() {
         for (let j = bullets.length - 1; j >= 0; j--) {
             const bullet = bullets[j];
 
-            if (Math.abs(bullet.x - enemy.x) < 5 && Math.abs(bullet.y - enemy.y) < 7) {
-                damageEnemy(enemy,bullet.damage);
+            if (Math.abs(bullet.x - enemy.x) < 5 &&
+                Math.abs(bullet.y - enemy.y) < 7) {
+                damageEnemy(enemy, bullet.damage);
 
                 if (bullet.hit) bullet.hit();
                 else if (bullet.destroy) bullet.destroy();
@@ -218,22 +259,26 @@ function checkPlayerBullets() {
     }
 }
 
-function createPowerUp(x,y) {
-    const names = ["energy","shield","rapid","emp"];
+function createPowerUp(x, y) {
+    const names = ["energy", "shield", "rapid", "emp"];
     const type = names[Math.floor(Math.random() * names.length)];
-    const el = document.createElement("div");
 
-    el.className = "power-up power-" + type;
-    el.style.left = x + "%";
-    el.style.top = y + "%";
+    const icons = {
+        energy: "⚡",
+        shield: "🛡️",
+        rapid: "🔥",
+        emp: "✦"
+    };
 
-    area.appendChild(el);
+    const element = document.createElement("div");
+    element.className = "power-up";
+    element.textContent = icons[type];
+    element.style.left = x + "%";
+    element.style.top = y + "%";
+    area.appendChild(element);
 
     enemyState.powerUps.push({
-        el: el,
-        x: x,
-        y: y,
-        type: type
+        element, x, y, type
     });
 }
 
@@ -242,19 +287,18 @@ function updatePowerUps() {
 
     for (let i = enemyState.powerUps.length - 1; i >= 0; i--) {
         const power = enemyState.powerUps[i];
+        power.y += 0.22;
+        power.element.style.top = power.y + "%";
 
-        power.y += .28;
-        power.el.style.top = power.y + "%";
-
-        if (Math.abs(power.x - player.x) < 5 && Math.abs(power.y - player.y) < 7) {
+        if (Math.abs(power.x - player.x) < 5 &&
+            Math.abs(power.y - player.y) < 7) {
             window.NebulaGame.collectPowerUp(power.type);
 
-            if (power.el.parentNode) power.el.remove();
-            enemyState.powerUps.splice(i,1);
-
+            if (power.element.parentNode) power.element.remove();
+            enemyState.powerUps.splice(i, 1);
         } else if (power.y > 105) {
-            if (power.el.parentNode) power.el.remove();
-            enemyState.powerUps.splice(i,1);
+            if (power.element.parentNode) power.element.remove();
+            enemyState.powerUps.splice(i, 1);
         }
     }
 }
@@ -263,61 +307,82 @@ function startWave() {
     const data = waveData[enemyState.wave];
     if (!data) return;
 
-    enemyState.quota = data.quota;
-    enemyState.spawned = 0;
+    enemyState.kills = 0;
     enemyState.spawnTimer = 0;
+    enemyState.maxAlive = data.maxAlive;
+    spawnEnemy();
 
-    waveMessage("WAVE " + enemyState.wave);
+    if (enemyState.wave > 1)
+        waveMessage("WAVE " + enemyState.wave);
+}
+
+function checkWaveComplete() {
+    if (enemyState.bossActive) return;
+
+    const data = waveData[enemyState.wave];
+    if (!data) return;
+
+    if (enemyState.kills >= data.target)
+        nextWave();
 }
 
 function nextWave() {
+    if (enemyState.bossActive) return;
+
+    if (enemyState.wave >= 4) {
+        enemyState.wave = 5;
+
+        if (window.NebulaGame.setWave)
+            window.NebulaGame.setWave(5);
+
+        startBoss();
+        return;
+    }
+
     enemyState.wave++;
 
-    if (window.NebulaGame.setWave) {
+    if (window.NebulaGame.setWave)
         window.NebulaGame.setWave(enemyState.wave);
-    }
 
-    if (enemyState.wave === 5) {
-        startBoss();
-    } else {
-        startWave();
-    }
-}
-
-function updateWave() {
-    if (enemyState.bossActive || enemyState.bossDefeated) return;
-
-    if (enemyState.spawned < enemyState.quota) return;
-    if (enemyState.enemies.length > 0) return;
-
-    nextWave();
+    startWave();
 }
 
 function startBoss() {
     enemyState.bossActive = true;
+    enemyState.bossPhase = 1;
+    waveMessage("⚠ FINAL BOSS INCOMING ⚠");
 
-    waveMessage("⚠ HOSTILE COMMANDER INBOUND ⚠");
+    const element = document.createElement("div");
+    element.className = "boss-ship";
+    element.innerHTML =
+        '<div class="boss-core"></div>' +
+        '<div class="boss-fin boss-fin-left"></div>' +
+        '<div class="boss-fin boss-fin-right"></div>';
 
-    const el = document.createElement("div");
-    el.className = "boss";
-    el.style.left = "50%";
-    el.style.top = "5%";
+    element.style.left = "50%";
+    element.style.top = "5%";
+    area.appendChild(element);
 
-    area.appendChild(el);
-
-    const hp = 150 + enemyState.wave * 15;
+    const hp = 240;
 
     enemyState.boss = {
-        el: el,
+        element,
         x: 50,
         y: 5,
-        hp: hp,
+        hp,
         maxHp: hp,
         direction: 1,
-        cooldown: 180
+        cooldown: 120
     };
 
     bossHUD.style.display = "block";
+
+    if (bossPhaseUI)
+        bossPhaseUI.textContent = "PHASE 1 // HUNTER";
+
+    if (window.NebulaGame.setBossMode)
+        window.NebulaGame.setBossMode(true);
+
     updateBossBar();
 }
 
@@ -325,44 +390,77 @@ function updateBoss() {
     const boss = enemyState.boss;
     if (!boss) return;
 
-    boss.x += boss.direction * .25;
+    const ratio = boss.hp / boss.maxHp;
+    let phase = 1;
 
-    if (boss.x >= 88 || boss.x <= 12) {
-        boss.direction *= -1;
+    if (ratio <= 0.66) phase = 2;
+    if (ratio <= 0.33) phase = 3;
+
+    if (phase !== enemyState.bossPhase) {
+        enemyState.bossPhase = phase;
+
+        if (bossPhaseUI) {
+            bossPhaseUI.textContent =
+                phase === 2 ? "PHASE 2 // OVERDRIVE" :
+                "PHASE 3 // RAMPAGE";
+        }
+
+        waveMessage(
+            phase === 2 ? "BOSS OVERDRIVE" : "BOSS RAMPAGE"
+        );
     }
 
-    boss.el.style.left = boss.x + "%";
+    const speed =
+        phase === 3 ? 0.48 :
+        phase === 2 ? 0.38 : 0.28;
 
+    boss.x += boss.direction * speed;
+
+    if (boss.x >= 84 || boss.x <= 16)
+        boss.direction *= -1;
+
+    boss.element.style.left = boss.x + "%";
     boss.cooldown--;
 
     if (boss.cooldown <= 0) {
         bossShoot();
-        boss.cooldown = 115;
+
+        boss.cooldown =
+            phase === 1 ? 115 :
+            phase === 2 ? 80 : 55;
     }
 
     checkBossHit();
     updateBossBar();
 
-    if (boss.hp <= 0) defeatBoss();
+    if (boss.hp <= 0)
+        defeatBoss();
 }
 
 function bossShoot() {
     const boss = enemyState.boss;
+    if (!boss) return;
 
-    [-12,-6,0,6,12].forEach(offset => {
-        const el = document.createElement("div");
+    let offsets = [-7, 0, 7];
 
-        el.className = "enemy-bullet";
-        el.style.left = (boss.x + offset) + "%";
-        el.style.top = (boss.y + 8) + "%";
+    if (enemyState.bossPhase === 2)
+        offsets = [-10, -5, 0, 5, 10];
 
-        area.appendChild(el);
+    if (enemyState.bossPhase === 3)
+        offsets = [-13, -6.5, 0, 6.5, 13];
+
+    offsets.forEach(offset => {
+        const element = document.createElement("div");
+        element.className = "enemy-bullet boss-bullet";
+        element.style.left = (boss.x + offset) + "%";
+        element.style.top = (boss.y + 9) + "%";
+        area.appendChild(element);
 
         enemyState.bullets.push({
-            el: el,
+            element,
             x: boss.x + offset,
-            y: boss.y + 8,
-            speed: .48,
+            y: boss.y + 9,
+            speed: enemyState.bossPhase === 3 ? 0.72 : 0.56,
             damage: 1
         });
     });
@@ -377,7 +475,8 @@ function checkBossHit() {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
 
-        if (Math.abs(bullet.x - boss.x) < 12 && Math.abs(bullet.y - boss.y) < 11) {
+        if (Math.abs(bullet.x - boss.x) < 12 &&
+            Math.abs(bullet.y - boss.y) < 12) {
             boss.hp -= bullet.damage;
 
             if (bullet.hit) bullet.hit();
@@ -391,7 +490,7 @@ function updateBossBar() {
 
     const percent = Math.max(
         0,
-        enemyState.boss.hp / enemyState.boss.maxHp * 100
+        (enemyState.boss.hp / enemyState.boss.maxHp) * 100
     );
 
     bossFill.style.width = percent + "%";
@@ -401,111 +500,106 @@ function defeatBoss() {
     const boss = enemyState.boss;
     if (!boss) return;
 
-    if (boss.el.parentNode) boss.el.remove();
+    if (boss.element.parentNode)
+        boss.element.remove();
 
     enemyState.boss = null;
     enemyState.bossActive = false;
-    enemyState.bossDefeated = true;
-
     bossHUD.style.display = "none";
 
-    killEnemy(5000);
-    waveMessage("BOSS DEFEATED");
+    if (window.NebulaGame.setBossMode)
+        window.NebulaGame.setBossMode(false);
+
+    window.NebulaGame.addScore(5000);
+    waveMessage("BOSS DEFEATED!");
+
+    if (window.NebulaGame.winGame)
+        window.NebulaGame.winGame();
 }
 
-window.addEventListener("nebula-emp",function() {
+window.addEventListener("nebula-emp", () => {
     const player = playerPos();
 
     for (let i = enemyState.enemies.length - 1; i >= 0; i--) {
         const enemy = enemyState.enemies[i];
-
         const dx = enemy.x - player.x;
         const dy = enemy.y - player.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance <= 25) {
-            damageEnemy(enemy,2);
-        }
+        if (distance <= 28)
+            damageEnemy(enemy, 3);
     }
 
-    for (let i = enemyState.bullets.length - 1; i >= 0; i--) {
+    for (let i = enemyState.bullets.length - 1; i >= 0; i--)
         removeEnemyBullet(enemyState.bullets[i]);
-    }
 });
-
-function updateEnemyCount() {
-    if (!enemyCountUI) return;
-
-    enemyCountUI.textContent =
-        enemyState.enemies.length +
-        (enemyState.boss ? " + BOSS" : "");
-}
 
 function clearEnemyObjects() {
     enemyState.enemies.forEach(enemy => {
-        if (enemy.el.parentNode) enemy.el.remove();
+        if (enemy.element.parentNode) enemy.element.remove();
     });
 
     enemyState.bullets.forEach(bullet => {
-        if (bullet.el.parentNode) bullet.el.remove();
+        if (bullet.element.parentNode) bullet.element.remove();
     });
 
     enemyState.powerUps.forEach(power => {
-        if (power.el.parentNode) power.el.remove();
+        if (power.element.parentNode) power.element.remove();
     });
 
-    if (enemyState.boss && enemyState.boss.el.parentNode) {
-        enemyState.boss.el.remove();
+    if (enemyState.boss &&
+        enemyState.boss.element.parentNode) {
+        enemyState.boss.element.remove();
     }
 
     enemyState.enemies = [];
     enemyState.bullets = [];
     enemyState.powerUps = [];
     enemyState.boss = null;
-
     enemyState.bossActive = false;
-    enemyState.bossDefeated = false;
-
-    if (bossHUD) {
-        bossHUD.style.display = "none";
-    }
+    enemyState.bossPhase = 1;
 }
 
 function resetEnemySystem() {
     clearEnemyObjects();
 
     enemyState.wave = 1;
+    enemyState.kills = 0;
     enemyState.spawnTimer = 0;
-    enemyState.spawned = 0;
-    enemyState.quota = waveData[1].quota;
     enemyState.running = true;
 
-    if (window.NebulaGame && window.NebulaGame.setWave) {
+    if (window.NebulaGame.setWave)
         window.NebulaGame.setWave(1);
-    }
 
+    startWave();
     updateEnemyCount();
 }
 
 window.resetEnemySystem = resetEnemySystem;
 
+function updateEnemyCount() {
+    if (!enemyCountDisplay) return;
+
+    enemyCountDisplay.textContent =
+        enemyState.enemies.length +
+        (enemyState.boss ? " + BOSS" : "");
+}
+
 function enemyLoop() {
     if (gameRunning()) {
         enemyState.running = true;
 
-        if (!enemyState.bossActive && !enemyState.bossDefeated) {
-            enemyState.spawnTimer++;
-
+        if (!enemyState.bossActive) {
             const data = waveData[enemyState.wave];
 
-            if (
-                data &&
-                enemyState.spawned < enemyState.quota &&
-                enemyState.enemies.length < 4 &&
-                enemyState.spawnTimer >= data.delay
-            ) {
-                spawnEnemy();
-                enemyState.spawnTimer = 0;
+            if (data) {
+                enemyState.spawnTimer++;
+
+                if (enemyState.spawnTimer >= data.delay &&
+                    enemyState.enemies.length < data.maxAlive) {
+                    spawnEnemy();
+                    enemyState.spawnTimer = 0;
+                }
             }
         }
 
@@ -514,13 +608,10 @@ function enemyLoop() {
         updatePowerUps();
         checkPlayerBullets();
 
-        if (enemyState.bossActive) {
+        if (enemyState.bossActive)
             updateBoss();
-        }
 
-        updateWave();
         updateEnemyCount();
-
     } else {
         enemyState.running = false;
     }

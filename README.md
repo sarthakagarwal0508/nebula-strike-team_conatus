@@ -1,20 +1,18 @@
 # NEBULA STRIKE
 
-Final polished version for the Team Conatus space shooter.
+A browser-based space shooter built with HTML, CSS and JavaScript.
 
-Controls:
-A / D or Arrow Keys = move
-Space = shoot
-E = EMP
-P = pause
+## Controls
+- A / D or Arrow Keys - move
+- Space - fire
+- E - EMP
+- P - pause / resume
+- Enter - start / restart
 
-Wave progression:
-Wave 1 = 10 enemies
-Wave 2 = 15 enemies
-Wave 3 = 20 enemies
-Wave 4 = 25 enemies
-Wave 5 = boss
-
-Mission objective stops at 20 kills and completes once.
-
-The boss is a separately styled game object with a visible boss HUD and multi-shot attack pattern.
+## Wave Progression
+- Wave 1: Drone swarm
+- Wave 2: Drones + Shooters
+- Wave 3: Shooters + Chasers
+- Wave 4: Chasers + Tanks + Bombers
+- Wave 5: Boss fight with 3 phases
+- Wave 6+: post-boss advanced mode
