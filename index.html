@@ -1,277 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Nebula Strike</title>
-
     <link rel="stylesheet" href="style.css">
-
 </head>
-
 <body>
 
 <main class="game">
 
-    <!-- START SCREEN -->
+<section id="start-screen" class="screen">
+    <div class="start-box">
+        <p class="tag">DEEP SPACE COMBAT // SECTOR 07</p>
+        <h1>NEBULA STRIKE</h1>
+        <p class="subtitle">Break through the hostile fleet.</p>
 
-    <section id="start-screen" class="screen">
-
-        <div class="start-box">
-
-            <p class="tag">DEEP SPACE COMBAT</p>
-
-            <h1>NEBULA STRIKE</h1>
-
-            <p class="subtitle">
-                Survive the Nebula
-            </p>
-
-            <div class="controls">
-
-                <span>A / D</span>
-                <span>SPACE</span>
-                <span>E</span>
-                <span>P</span>
-
-            </div>
-
-            <div class="control-text">
-
-                <span>MOVE</span>
-                <span>FIRE</span>
-                <span>EMP</span>
-                <span>PAUSE</span>
-
-            </div>
-
-            <button id="start-btn">
-                START MISSION
-            </button>
-
+        <div class="controls">
+            <span>A / D</span>
+            <span>SPACE</span>
+            <span>E</span>
+            <span>P</span>
         </div>
 
-    </section>
-
-
-    <!-- GAME SCREEN -->
-
-    <section id="game-screen" class="screen">
-
-        <!-- TOP HUD -->
-
-        <div class="hud">
-
-            <div class="hud-item">
-                <span>Score</span>
-                <strong id="score">0</strong>
-            </div>
-
-            <div class="hud-item">
-                <span>Wave</span>
-                <strong id="wave">1</strong>
-            </div>
-
-            <div class="hud-item">
-                <span>Lives</span>
-                <strong id="lives">3</strong>
-            </div>
-
-            <div class="hud-item">
-                <span>Combo</span>
-                <strong id="combo">x1</strong>
-            </div>
-
-            <div class="hud-item">
-                <span>Hostiles</span>
-                <strong id="enemy-count">0</strong>
-            </div>
-
+        <div class="control-text">
+            <span>MOVE</span>
+            <span>FIRE</span>
+            <span>EMP</span>
+            <span>PAUSE</span>
         </div>
 
+        <button id="start-btn">START MISSION</button>
+    </div>
+</section>
 
-        <!-- PAUSE BUTTON -->
+<section id="game-screen" class="screen">
 
-        <button id="pause-btn">
-            PAUSE [P]
-        </button>
+    <div class="hud">
+        <div class="hud-item"><span>Score</span><strong id="score">0</strong></div>
+        <div class="hud-item"><span>Wave</span><strong id="wave">1</strong></div>
+        <div class="hud-item"><span>Lives</span><strong id="lives">3</strong></div>
+        <div class="hud-item"><span>Combo</span><strong id="combo">x1</strong></div>
+        <div class="hud-item"><span>Hostiles</span><strong id="enemy-count">0</strong></div>
+    </div>
 
+    <button id="pause-btn">PAUSE [P]</button>
 
-        <!-- MISSION -->
+    <div class="mission">
+        <div>
+            <small>PRIMARY OBJECTIVE</small>
+            <strong id="mission-text">Destroy 20 enemies</strong>
+        </div>
+        <strong id="mission-progress">0 / 20</strong>
+    </div>
 
-        <div class="mission">
+    <div id="boss-hud" class="boss-hud">
+        <div class="boss-title">⚠ HOSTILE COMMANDER ⚠</div>
+        <div class="boss-bar"><div id="boss-fill"></div></div>
+    </div>
 
-            <div>
-                <small>PRIMARY OBJECTIVE</small>
+    <div id="game-area" class="game-area">
+        <div class="arena-label left-label">SECTOR 07</div>
+        <div class="arena-label right-label">LIVE // COMBAT</div>
 
-                <strong id="mission-text">
-                    Destroy 10 enemies
-                </strong>
-            </div>
-
-            <strong id="mission-progress">
-                0 / 10
-            </strong>
-
+        <div class="player" id="player">
+            <span class="engine-flame"></span>
         </div>
 
+        <div class="emp-effect" id="emp-effect"></div>
+    </div>
 
-        <!-- BOSS HUD -->
+    <div class="bottom-hud">
 
-        <div id="boss-hud" class="boss-hud">
-
-            <div class="boss-title">
-                ⚠ BOSS SYSTEM ⚠
+        <div class="meter">
+            <div class="meter-title">
+                <span>Energy</span>
+                <strong id="energy-value">100%</strong>
             </div>
-
-            <div class="boss-bar">
-                <div id="boss-fill"></div>
-            </div>
-
+            <div class="bar"><div id="energy-fill"></div></div>
         </div>
 
-
-        <!-- GAME AREA -->
-
-        <div id="game-area" class="game-area">
-
-            <div class="space-glow"></div>
-
-            <div class="player" id="player">
-                🚀
-            </div>
-
-            <div
-                class="emp-effect"
-                id="emp-effect"
-            ></div>
-
+        <div class="emp-status">
+            <span>EMP SYSTEM</span>
+            <strong id="emp-status">READY [E]</strong>
         </div>
 
-
-        <!-- BOTTOM HUD -->
-
-        <div class="bottom-hud">
-
-            <div class="meter">
-
-                <div class="meter-title">
-                    <span>Energy</span>
-                    <strong id="energy-value">100%</strong>
-                </div>
-
-                <div class="bar">
-                    <div id="energy-fill"></div>
-                </div>
-
+        <div class="meter">
+            <div class="meter-title">
+                <span>Shield</span>
+                <strong id="shield-value">100%</strong>
             </div>
-
-
-            <div class="emp-status">
-
-                <span>EMP</span>
-
-                <strong id="emp-status">
-                    READY [E]
-                </strong>
-
-            </div>
-
-
-            <div class="meter">
-
-                <div class="meter-title">
-                    <span>Shield</span>
-                    <strong id="shield-value">100%</strong>
-                </div>
-
-                <div class="bar shield-bar">
-                    <div id="shield-fill"></div>
-                </div>
-
-            </div>
-
+            <div class="bar"><div id="shield-fill"></div></div>
         </div>
 
-    </section>
+    </div>
+</section>
 
+<section id="pause-screen" class="pause-screen">
+    <div class="pause-box">
+        <p class="tag">SYSTEM PAUSED</p>
+        <h2>GAME PAUSED</h2>
+        <p>Mission status has been frozen.</p>
+        <button id="resume-btn">RESUME MISSION</button>
+        <small>Press P to continue</small>
+    </div>
+</section>
 
-    <!-- PAUSE SCREEN -->
-
-    <section id="pause-screen" class="pause-screen">
-
-        <div class="pause-box">
-
-            <p class="tag">
-                SYSTEM PAUSED
-            </p>
-
-            <h2>
-                GAME PAUSED
-            </h2>
-
-            <p class="pause-text">
-                Mission is on hold
-            </p>
-
-            <button id="resume-btn">
-                RESUME GAME
-            </button>
-
-            <div class="pause-controls">
-                Press P to resume
-            </div>
-
+<section id="game-over" class="screen">
+    <div class="end-box">
+        <p class="tag">MISSION FAILED</p>
+        <h2>GAME OVER</h2>
+        <div class="final-stats">
+            <p>Score <strong id="final-score">0</strong></p>
+            <p>Wave <strong id="final-wave">1</strong></p>
         </div>
-
-    </section>
-
-
-    <!-- GAME OVER -->
-
-    <section id="game-over" class="screen">
-
-        <div class="end-box">
-
-            <p class="tag">
-                MISSION FAILED
-            </p>
-
-            <h2>
-                GAME OVER
-            </h2>
-
-            <div class="final-stats">
-
-                <p>
-                    Score
-                    <strong id="final-score">0</strong>
-                </p>
-
-                <p>
-                    Wave
-                    <strong id="final-wave">1</strong>
-                </p>
-
-            </div>
-
-            <button id="restart-btn">
-                PLAY AGAIN
-            </button>
-
-        </div>
-
-    </section>
+        <button id="restart-btn">PLAY AGAIN</button>
+    </div>
+</section>
 
 </main>
 
-
 <script src="script.js"></script>
 <script src="enemy.js"></script>
-
 </body>
 </html>

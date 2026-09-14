@@ -34,7 +34,6 @@ const finalWave = document.getElementById("final-wave");
 
 
 const state = {
-
     running: false,
     paused: false,
 
@@ -51,13 +50,12 @@ const state = {
     empReady: true,
 
     lastShot: 0,
-
     bullets: [],
-
     keys: {},
 
     missionKills: 0,
-    missionTarget: 10,
+    missionTarget: 20,
+    missionComplete: false,
 
     rapidFire: false,
     rapidFireTimer: 0
@@ -94,11 +92,11 @@ function startGame() {
     state.shield = 100;
 
     state.empReady = true;
-
     state.lastShot = 0;
 
     state.missionKills = 0;
-    state.missionTarget = 10;
+    state.missionTarget = 20;
+    state.missionComplete = false;
 
     state.rapidFire = false;
     state.rapidFireTimer = 0;
@@ -115,7 +113,6 @@ function startGame() {
     player.style.left = "50%";
 
     pauseScreen.style.display = "none";
-
     startScreen.style.display = "none";
     gameOverScreen.style.display = "none";
     gameScreen.style.display = "flex";
@@ -135,11 +132,8 @@ function togglePause() {
     state.paused = !state.paused;
 
     if (state.paused) {
-
         pauseScreen.style.display = "flex";
-
     } else {
-
         pauseScreen.style.display = "none";
     }
 }
@@ -155,13 +149,10 @@ document.addEventListener("keydown", function(event) {
 
     state.keys[key] = true;
 
-
     if (key === "p") {
-
         togglePause();
         return;
     }
-
 
     if (event.code === "Space") {
 
@@ -172,12 +163,8 @@ document.addEventListener("keydown", function(event) {
         }
     }
 
-
-    if (key === "e") {
-
-        if (!state.paused) {
-            useEMP();
-        }
+    if (key === "e" && !state.paused) {
+        useEMP();
     }
 });
 
@@ -194,14 +181,12 @@ function updatePlayer() {
 
     if (!state.running || state.paused) return;
 
-
     if (
         state.keys["arrowleft"] ||
         state.keys["a"]
     ) {
         state.playerX -= playerSpeed;
     }
-
 
     if (
         state.keys["arrowright"] ||
@@ -210,16 +195,13 @@ function updatePlayer() {
         state.playerX += playerSpeed;
     }
 
-
     if (state.playerX < 5) {
         state.playerX = 5;
     }
 
-
     if (state.playerX > 95) {
         state.playerX = 95;
     }
-
 
     player.style.left = state.playerX + "%";
 }
@@ -229,57 +211,39 @@ function shoot() {
 
     if (!state.running || state.paused) return;
 
-
     const now = Date.now();
 
     let shotDelay = normalShotDelay;
-
 
     if (state.rapidFire) {
         shotDelay = rapidShotDelay;
     }
 
-
     if (now - state.lastShot < shotDelay) {
         return;
     }
-
 
     if (state.energy < shotCost) {
         return;
     }
 
-
     state.lastShot = now;
-
     state.energy -= shotCost;
-
 
     const bulletElement = document.createElement("div");
 
     bulletElement.className = "bullet";
-
-    bulletElement.style.left =
-        state.playerX + "%";
-
-    bulletElement.style.bottom =
-        "75px";
-
+    bulletElement.style.left = state.playerX + "%";
+    bulletElement.style.bottom = "75px";
 
     gameArea.appendChild(bulletElement);
 
-
     state.bullets.push({
-
         element: bulletElement,
-
         x: state.playerX,
-
         y: 88,
-
         damage: 1
     });
-
 
     updateUI();
 }
@@ -297,13 +261,8 @@ function updateBullets() {
 
         bullet.y -= bulletSpeed;
 
-
-        bullet.element.style.left =
-            bullet.x + "%";
-
-        bullet.element.style.top =
-            bullet.y + "%";
-
+        bullet.element.style.left = bullet.x + "%";
+        bullet.element.style.top = bullet.y + "%";
 
         if (bullet.y < -5) {
             removeBullet(bullet);
@@ -318,10 +277,7 @@ function removeBullet(bullet) {
         bullet.element.remove();
     }
 
-
-    const index =
-        state.bullets.indexOf(bullet);
-
+    const index = state.bullets.indexOf(bullet);
 
     if (index !== -1) {
         state.bullets.splice(index, 1);
@@ -336,9 +292,7 @@ function clearBullets() {
         if (bullet.element.parentNode) {
             bullet.element.remove();
         }
-
     });
-
 
     state.bullets = [];
 }
@@ -348,18 +302,13 @@ function regenerateEnergy() {
 
     if (!state.running || state.paused) return;
 
-
     if (state.energy < maxEnergy) {
-
         state.energy += 0.10;
     }
 
-
     if (state.energy > maxEnergy) {
-
         state.energy = maxEnergy;
     }
-
 
     updateEnergyUI();
 }
@@ -367,42 +316,28 @@ function regenerateEnergy() {
 
 function updateEnergyUI() {
 
-    const value =
-        Math.round(state.energy);
+    const value = Math.round(state.energy);
 
-
-    energyFill.style.width =
-        value + "%";
-
-    energyValue.textContent =
-        value + "%";
+    energyFill.style.width = value + "%";
+    energyValue.textContent = value + "%";
 }
 
 
 function useEMP() {
 
     if (!state.running || state.paused) return;
-
     if (!state.empReady) return;
 
-
     state.empReady = false;
-
-    empStatus.textContent =
-        "RECHARGING...";
-
+    empStatus.textContent = "RECHARGING...";
 
     empEffect.classList.remove("active");
-
     void empEffect.offsetWidth;
-
     empEffect.classList.add("active");
-
 
     window.dispatchEvent(
         new CustomEvent("nebula-emp")
     );
-
 
     setTimeout(function() {
 
@@ -420,11 +355,9 @@ function damagePlayer(amount) {
 
     if (!state.running) return;
 
-
     if (state.shield > 0) {
 
         state.shield -= amount * 14;
-
 
         if (state.shield < 0) {
             state.shield = 0;
@@ -435,16 +368,11 @@ function damagePlayer(amount) {
         loseLife();
     }
 
-
     player.classList.remove("player-damaged");
-
     void player.offsetWidth;
-
     player.classList.add("player-damaged");
 
-
     state.combo = 1;
-
 
     updateUI();
 }
@@ -453,9 +381,7 @@ function damagePlayer(amount) {
 function loseLife() {
 
     state.lives--;
-
     state.shield = maxShield;
-
 
     if (state.lives <= 0) {
         endGame();
@@ -467,33 +393,22 @@ function regenerateShield() {
 
     if (!state.running || state.paused) return;
 
-
     if (state.shield < maxShield) {
-
         state.shield += 0.06;
     }
 
-
     if (state.shield > maxShield) {
-
         state.shield = maxShield;
     }
 
-
-    shieldFill.style.width =
-        state.shield + "%";
-
-    shieldValue.textContent =
-        Math.round(state.shield) + "%";
+    shieldFill.style.width = state.shield + "%";
+    shieldValue.textContent = Math.round(state.shield) + "%";
 }
 
 
 function addScore(amount) {
 
-    state.score +=
-        amount * state.combo;
-
-
+    state.score += amount * state.combo;
     updateScoreUI();
 }
 
@@ -502,55 +417,42 @@ function registerEnemyKill(points) {
 
     state.missionKills++;
 
-
-    if (
-        state.missionKills % 5 === 0
-    ) {
+    if (state.missionKills % 5 === 0) {
         state.combo++;
     }
 
-
     addScore(points);
-
     updateMissionUI();
 }
 
 
 function updateScoreUI() {
 
-    scoreUI.textContent =
-        state.score;
-
-    comboUI.textContent =
-        "x" + state.combo;
+    scoreUI.textContent = state.score;
+    comboUI.textContent = "x" + state.combo;
 }
 
 
 function updateMissionUI() {
 
+    if (state.missionComplete) {
+
+        missionProgress.textContent = "✓ COMPLETE";
+        missionText.textContent = "OBJECTIVE COMPLETE";
+
+        return;
+    }
+
     missionProgress.textContent =
-        state.missionKills +
-        " / " +
-        state.missionTarget;
+        state.missionKills + " / " + state.missionTarget;
 
+    if (state.missionKills >= state.missionTarget) {
 
-    if (
-        state.missionKills >=
-        state.missionTarget
-    ) {
-
+        state.missionComplete = true;
         state.score += 1000;
 
-        state.missionKills = 0;
-
-        state.missionTarget += 10;
-
-
-        missionText.textContent =
-            "Destroy " +
-            state.missionTarget +
-            " enemies";
-
+        missionProgress.textContent = "✓ COMPLETE";
+        missionText.textContent = "OBJECTIVE COMPLETE";
 
         updateScoreUI();
     }
@@ -560,9 +462,7 @@ function updateMissionUI() {
 function setWave(wave) {
 
     state.wave = wave;
-
-    waveUI.textContent =
-        wave;
+    waveUI.textContent = wave;
 }
 
 
@@ -572,11 +472,9 @@ function updateRapidFire() {
 
     state.rapidFireTimer -= 16.67;
 
-
     if (state.rapidFireTimer <= 0) {
 
         state.rapidFire = false;
-
         state.rapidFireTimer = 0;
     }
 }
@@ -592,61 +490,29 @@ function endGame() {
 
     clearBullets();
 
+    finalScore.textContent = state.score;
+    finalWave.textContent = state.wave;
 
-    finalScore.textContent =
-        state.score;
-
-    finalWave.textContent =
-        state.wave;
-
-
-    gameScreen.style.display =
-        "none";
-
-    pauseScreen.style.display =
-        "none";
-
-    gameOverScreen.style.display =
-        "flex";
+    gameScreen.style.display = "none";
+    pauseScreen.style.display = "none";
+    gameOverScreen.style.display = "flex";
 }
 
 
 function updateUI() {
 
-    scoreUI.textContent =
-        state.score;
-
-    waveUI.textContent =
-        state.wave;
-
-    livesUI.textContent =
-        state.lives;
-
-    comboUI.textContent =
-        "x" + state.combo;
-
+    scoreUI.textContent = state.score;
+    waveUI.textContent = state.wave;
+    livesUI.textContent = state.lives;
+    comboUI.textContent = "x" + state.combo;
 
     updateEnergyUI();
 
+    shieldFill.style.width = state.shield + "%";
+    shieldValue.textContent = Math.round(state.shield) + "%";
 
-    shieldFill.style.width =
-        state.shield + "%";
-
-    shieldValue.textContent =
-        Math.round(state.shield) + "%";
-
-
-    if (state.empReady) {
-
-        empStatus.textContent =
-            "READY [E]";
-
-    } else {
-
-        empStatus.textContent =
-            "RECHARGING...";
-    }
-
+    empStatus.textContent =
+        state.empReady ? "READY [E]" : "RECHARGING...";
 
     updateMissionUI();
 }
@@ -655,121 +521,83 @@ function updateUI() {
 window.NebulaGame = {
 
     getPlayerPosition: function() {
-
         return {
-
             x: state.playerX,
-
             y: 88
         };
     },
 
-
     damagePlayer: function(amount) {
-
         damagePlayer(amount);
     },
 
-
     addScore: function(amount) {
-
         addScore(amount);
     },
 
-
     registerEnemyKill: function(points) {
-
         registerEnemyKill(points);
     },
 
-
     getPlayerBullets: function() {
 
-        return state.bullets.map(
-            function(bullet) {
+        return state.bullets.map(function(bullet) {
 
-                return {
+            return {
+                x: bullet.x,
+                y: bullet.y,
+                damage: bullet.damage,
 
-                    x: bullet.x,
+                hit: function() {
+                    removeBullet(bullet);
+                },
 
-                    y: bullet.y,
-
-                    damage: bullet.damage,
-
-                    hit: function() {
-                        removeBullet(bullet);
-                    },
-
-                    destroy: function() {
-                        removeBullet(bullet);
-                    }
-                };
-            }
-        );
+                destroy: function() {
+                    removeBullet(bullet);
+                }
+            };
+        });
     },
 
-
     isRunning: function() {
-
         return state.running;
     },
 
-
     isPaused: function() {
-
         return state.paused;
     },
-
 
     collectPowerUp: function(type) {
 
         if (type === "energy") {
-
-            state.energy =
-                Math.min(
-                    maxEnergy,
-                    state.energy + 35
-                );
+            state.energy = Math.min(
+                maxEnergy,
+                state.energy + 35
+            );
         }
-
 
         if (type === "shield") {
-
-            state.shield =
-                Math.min(
-                    maxShield,
-                    state.shield + 40
-                );
+            state.shield = Math.min(
+                maxShield,
+                state.shield + 40
+            );
         }
-
 
         if (type === "rapid") {
-
             state.rapidFire = true;
-
-            state.rapidFireTimer =
-                rapidFireDuration;
+            state.rapidFireTimer = rapidFireDuration;
         }
-
 
         if (type === "emp") {
-
             state.empReady = true;
-
-            empStatus.textContent =
-                "READY [E]";
         }
-
 
         updateUI();
     },
 
-
     setWave: function(wave) {
-
         setWave(wave);
     },
-
 
     resetEnemySystem: function() {
 
@@ -777,14 +605,11 @@ window.NebulaGame = {
             typeof window.resetEnemySystem ===
             "function"
         ) {
-
             window.resetEnemySystem();
         }
     },
 
-
     winGame: function() {
-
         endGame();
     }
 };
@@ -792,22 +617,14 @@ window.NebulaGame = {
 
 function gameLoop() {
 
-    if (
-        state.running &&
-        !state.paused
-    ) {
+    if (state.running && !state.paused) {
 
         updatePlayer();
-
         updateBullets();
-
         regenerateEnergy();
-
         regenerateShield();
-
         updateRapidFire();
     }
-
 
     requestAnimationFrame(gameLoop);
 }
