@@ -1,27 +1,20 @@
-# Nebula Strike
+# NEBULA STRIKE
 
-Nebula Strike is a browser-based space shooter game built using HTML, CSS, and JavaScript.
-The player controls a spaceship, destroys enemies, survives different waves, manages energy and shield, and eventually fights a boss.
+Final polished version for the Team Conatus space shooter.
 
-## Features
+Controls:
+A / D or Arrow Keys = move
+Space = shoot
+E = EMP
+P = pause
 
-- **Player spaceship movement**
-- **Shooting system**
-- **Energy management system**
-- **Shield system**
-- **Lives system**
-- **EMP special ability**
-- **Combo and score system**
-- **Mission objectives**
-- **Multiple enemy types**
-- **Enemy shooting**
-- **Enemy AI and movement**
-- **Collision detection**
-- **Wave progression**
-- **Boss fight**
-- **Power-ups**
-- **Game Over and restart system**
-- **Dynamic HUD updates**
+Wave progression:
+Wave 1 = 10 enemies
+Wave 2 = 15 enemies
+Wave 3 = 20 enemies
+Wave 4 = 25 enemies
+Wave 5 = boss
 
-##Live Link 
--(Click Here )[https://sarthakagarwal0508.github.io/nebula-strike-team_conatus/]
+Mission objective stops at 20 kills and completes once.
+
+The boss is a separately styled game object with a visible boss HUD and multi-shot attack pattern.
