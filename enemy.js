@@ -11,18 +11,18 @@ const enemyState = {
 };
 
 const waveData = {
-    1: { target: 10, delay: 85, maxAlive: 5 },
-    2: { target: 15, delay: 75, maxAlive: 6 },
-    3: { target: 20, delay: 65, maxAlive: 7 },
-    4: { target: 25, delay: 55, maxAlive: 8 }
+    1: { target: 10, delay: 100, maxAlive: 4 },
+    2: { target: 15, delay: 90, maxAlive: 5 },
+    3: { target: 20, delay: 80, maxAlive: 6 },
+    4: { target: 25, delay: 70, maxAlive: 7 }
 };
 
 const types = {
-    drone: { emoji: "👾", hp: 1, speed: 0.20, points: 100, shoot: false },
-    shooter: { emoji: "🛸", hp: 2, speed: 0.17, points: 200, shoot: true },
-    chaser: { emoji: "👹", hp: 2, speed: 0.21, points: 300, shoot: false },
-    tank: { emoji: "☄️", hp: 5, speed: 0.12, points: 500, shoot: true },
-    bomber: { emoji: "💣", hp: 3, speed: 0.16, points: 450, shoot: false }
+    drone: { emoji: "👾", hp: 1, speed: 0.15, points: 100, shoot: false },
+    shooter: { emoji: "🛸", hp: 2, speed: 0.13, points: 200, shoot: true },
+    chaser: { emoji: "👹", hp: 2, speed: 0.16, points: 300, shoot: false },
+    tank: { emoji: "☄️", hp: 5, speed: 0.09, points: 500, shoot: true },
+    bomber: { emoji: "💣", hp: 3, speed: 0.12, points: 450, shoot: false }
 };
 
 function gameRunning() {

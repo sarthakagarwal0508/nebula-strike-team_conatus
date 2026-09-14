@@ -63,7 +63,7 @@ const state = {
 const waveTargets = { 1: 10, 2: 15, 3: 20, 4: 25 };
 const playerSpeed = 0.75;
 const bulletSpeed = 1.8;
-const normalShotDelay = 180;
+const normalShotDelay = 120;
 const bossShotDelay = 120;
 const rapidShotDelay = 75;
 const shotCost = 4;
@@ -88,6 +88,7 @@ function startGame() {
     state.rapidFire = false;
     state.rapidFireTimer = 0;
     state.bossMode = false;
+    state.keys[" "] = false;
 
     clearBullets();
     player.style.left = "50%";
@@ -117,7 +118,9 @@ function startGame() {
 
 function togglePause() {
     if (!state.running) return;
+
     state.paused = !state.paused;
+    state.keys[" "] = false;
     pauseScreen.style.display = state.paused ? "flex" : "none";
 }
 
@@ -143,7 +146,7 @@ document.addEventListener("keydown", function(event) {
 
     if (event.code === "Space") {
         event.preventDefault();
-        if (!state.paused) shoot();
+        if (!state.paused) state.keys[" "] = true;
     }
 
     if (key === "e" && !state.paused) {
@@ -152,7 +155,11 @@ document.addEventListener("keydown", function(event) {
 });
 
 document.addEventListener("keyup", function(event) {
-    state.keys[event.key.toLowerCase()] = false;
+    const key = event.key.toLowerCase();
+    state.keys[key] = false;
+
+    if (event.code === "Space")
+        state.keys[" "] = false;
 });
 
 // MOBILE CONTROLS
@@ -180,7 +187,16 @@ mobileHold(rightBtn, "arrowright");
 if (fireBtn) {
     fireBtn.addEventListener("touchstart", function(event) {
         event.preventDefault();
-        shoot();
+        state.keys[" "] = true;
+    });
+
+    fireBtn.addEventListener("touchend", function(event) {
+        event.preventDefault();
+        state.keys[" "] = false;
+    });
+
+    fireBtn.addEventListener("touchcancel", function() {
+        state.keys[" "] = false;
     });
 }
 
@@ -425,6 +441,7 @@ function endGame() {
     state.running = false;
     state.paused = false;
     state.bossMode = false;
+    state.keys[" "] = false;
 
     clearBullets();
 
@@ -551,6 +568,7 @@ window.NebulaGame = {
         state.running = false;
         state.paused = false;
         state.bossMode = false;
+        state.keys[" "] = false;
 
         clearBullets();
 
@@ -569,6 +587,10 @@ window.NebulaGame = {
 function gameLoop() {
     if (state.running && !state.paused) {
         updatePlayer();
+
+        if (state.keys[" "])
+            shoot();
+
         updateBullets();
         regenerateEnergy();
         regenerateShield();
