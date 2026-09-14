@@ -63,15 +63,19 @@ const state = {
 const waveTargets = { 1: 10, 2: 15, 3: 20, 4: 25 };
 const playerSpeed = 0.75;
 const bulletSpeed = 1.8;
-const normalShotDelay = 120;
-const bossShotDelay = 120;
+const normalShotDelay = 100;
+const bossShotDelay = 100;
 const rapidShotDelay = 75;
 const shotCost = 4;
 const maxEnergy = 100;
 const maxShield = 100;
 const rapidFireDuration = 5000;
 
+let fireTimer = null;
+
 function startGame() {
+    stopFiring();
+
     state.running = true;
     state.paused = false;
     state.playerX = 50;
@@ -88,9 +92,10 @@ function startGame() {
     state.rapidFire = false;
     state.rapidFireTimer = 0;
     state.bossMode = false;
-    state.keys[" "] = false;
+    state.keys.Space = false;
 
     clearBullets();
+
     player.style.left = "50%";
     pauseScreen.style.display = "none";
     startScreen.style.display = "none";
@@ -120,7 +125,12 @@ function togglePause() {
     if (!state.running) return;
 
     state.paused = !state.paused;
-    state.keys[" "] = false;
+
+    if (state.paused) {
+        stopFiring();
+        state.keys.Space = false;
+    }
+
     pauseScreen.style.display = state.paused ? "flex" : "none";
 }
 
@@ -146,7 +156,11 @@ document.addEventListener("keydown", function(event) {
 
     if (event.code === "Space") {
         event.preventDefault();
-        if (!state.paused) state.keys[" "] = true;
+
+        if (!state.paused && state.running) {
+            state.keys.Space = true;
+            startFiring();
+        }
     }
 
     if (key === "e" && !state.paused) {
@@ -158,8 +172,10 @@ document.addEventListener("keyup", function(event) {
     const key = event.key.toLowerCase();
     state.keys[key] = false;
 
-    if (event.code === "Space")
-        state.keys[" "] = false;
+    if (event.code === "Space") {
+        state.keys.Space = false;
+        stopFiring();
+    }
 });
 
 // MOBILE CONTROLS
@@ -169,12 +185,12 @@ function mobileHold(button, key) {
     button.addEventListener("touchstart", function(event) {
         event.preventDefault();
         state.keys[key] = true;
-    });
+    }, { passive: false });
 
     button.addEventListener("touchend", function(event) {
         event.preventDefault();
         state.keys[key] = false;
-    });
+    }, { passive: false });
 
     button.addEventListener("touchcancel", function() {
         state.keys[key] = false;
@@ -187,16 +203,22 @@ mobileHold(rightBtn, "arrowright");
 if (fireBtn) {
     fireBtn.addEventListener("touchstart", function(event) {
         event.preventDefault();
-        state.keys[" "] = true;
-    });
+
+        if (!state.running || state.paused) return;
+
+        state.keys.Space = true;
+        startFiring();
+    }, { passive: false });
 
     fireBtn.addEventListener("touchend", function(event) {
         event.preventDefault();
-        state.keys[" "] = false;
-    });
+        state.keys.Space = false;
+        stopFiring();
+    }, { passive: false });
 
     fireBtn.addEventListener("touchcancel", function() {
-        state.keys[" "] = false;
+        state.keys.Space = false;
+        stopFiring();
     });
 }
 
@@ -204,7 +226,29 @@ if (mobileEmpBtn) {
     mobileEmpBtn.addEventListener("touchstart", function(event) {
         event.preventDefault();
         useEMP();
-    });
+    }, { passive: false });
+}
+
+function startFiring() {
+    if (fireTimer) return;
+
+    shoot();
+
+    fireTimer = setInterval(function() {
+        if (!state.running || state.paused || !state.keys.Space) {
+            stopFiring();
+            return;
+        }
+
+        shoot();
+    }, 100);
+}
+
+function stopFiring() {
+    if (fireTimer) {
+        clearInterval(fireTimer);
+        fireTimer = null;
+    }
 }
 
 function updatePlayer() {
@@ -226,8 +270,11 @@ function shoot() {
     const now = Date.now();
     let delay = normalShotDelay;
 
-    if (state.bossMode) delay = bossShotDelay;
-    if (state.rapidFire) delay = rapidShotDelay;
+    if (state.bossMode)
+        delay = bossShotDelay;
+
+    if (state.rapidFire)
+        delay = rapidShotDelay;
 
     if (now - state.lastShot < delay || state.energy < shotCost)
         return;
@@ -242,6 +289,7 @@ function shoot() {
 
     positions.forEach(function(offset) {
         const bulletElement = document.createElement("div");
+
         bulletElement.className = "bullet";
         bulletElement.style.left = (state.playerX + offset) + "%";
         bulletElement.style.bottom = "75px";
@@ -307,6 +355,7 @@ function regenerateEnergy() {
 
 function updateEnergyUI() {
     const value = Math.round(state.energy);
+
     energyFill.style.width = value + "%";
     energyValue.textContent = value + "%";
 }
@@ -441,8 +490,9 @@ function endGame() {
     state.running = false;
     state.paused = false;
     state.bossMode = false;
-    state.keys[" "] = false;
+    state.keys.Space = false;
 
+    stopFiring();
     clearBullets();
 
     if (window.NebulaAudio) {
@@ -568,8 +618,9 @@ window.NebulaGame = {
         state.running = false;
         state.paused = false;
         state.bossMode = false;
-        state.keys[" "] = false;
+        state.keys.Space = false;
 
+        stopFiring();
         clearBullets();
 
         if (window.NebulaAudio) {
@@ -587,10 +638,6 @@ window.NebulaGame = {
 function gameLoop() {
     if (state.running && !state.paused) {
         updatePlayer();
-
-        if (state.keys[" "])
-            shoot();
-
         updateBullets();
         regenerateEnergy();
         regenerateShield();
