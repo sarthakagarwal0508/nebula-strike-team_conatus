@@ -20,13 +20,12 @@ const enemyState = {
     bossPhase: 1,
     running: false
 };
-
 const waveData = enemyMobileMode
     ? {
-        1: { target: 10, delay: 130, maxAlive: 3 },
-        2: { target: 15, delay: 120, maxAlive: 3 },
-        3: { target: 20, delay: 110, maxAlive: 4 },
-        4: { target: 25, delay: 100, maxAlive: 5 }
+        1: { target: 10, delay: 115, maxAlive: 3 },
+        2: { target: 15, delay: 105, maxAlive: 3 },
+        3: { target: 20, delay: 95, maxAlive: 4 },
+        4: { target: 25, delay: 90, maxAlive: 5 }
     }
     : {
         1: { target: 10, delay: 100, maxAlive: 4 },
@@ -34,7 +33,7 @@ const waveData = enemyMobileMode
         3: { target: 20, delay: 80, maxAlive: 6 },
         4: { target: 25, delay: 70, maxAlive: 7 }
     };
-
+    
 const types = {
     drone: {
         emoji: "👾",
