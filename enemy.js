@@ -368,35 +368,22 @@ function damageEnemy(enemy, amount = 1) {
 }
 
 function checkPlayerBullets() {
-    const bullets =
-        window.NebulaGame.getPlayerBullets();
+    const bullets = window.NebulaGame.getPlayerBullets();
 
-    for (
-        let i = enemyState.enemies.length - 1;
-        i >= 0;
-        i--
-    ) {
+    const hitX = enemyMobileMode ? 6 : 5;
+    const hitY = enemyMobileMode ? 12 : 7;
+
+    for (let i = enemyState.enemies.length - 1; i >= 0; i--) {
         const enemy = enemyState.enemies[i];
 
-        for (
-            let j = bullets.length - 1;
-            j >= 0;
-            j--
-        ) {
+        for (let j = bullets.length - 1; j >= 0; j--) {
             const bullet = bullets[j];
 
             if (
-                Math.abs(
-                    bullet.x - enemy.x
-                ) < 5 &&
-                Math.abs(
-                    bullet.y - enemy.y
-                ) < 7
+                Math.abs(bullet.x - enemy.x) < hitX &&
+                Math.abs(bullet.y - enemy.y) < hitY
             ) {
-                damageEnemy(
-                    enemy,
-                    bullet.damage
-                );
+                damageEnemy(enemy, bullet.damage);
 
                 if (bullet.hit)
                     bullet.hit();
